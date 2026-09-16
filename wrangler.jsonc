@@ -1,0 +1,13 @@
+{
+  "name": "desidera",
+  "compatibility_date": "2026-09-16",
+  "main": "worker.js",
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "kv_namespaces": [
+    { "binding": "STORAGE", "id": "eb544a07122240fa892fe22a63daa581" }
+  ]
+}
