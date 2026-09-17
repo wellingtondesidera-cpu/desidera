@@ -14,10 +14,12 @@
   ],
   "durable_objects": {
     "bindings": [
-      { "name": "PAINEL_STORAGE", "class_name": "PainelStorage" }
+      { "name": "PAINEL_STORAGE", "class_name": "PainelStorage" },
+      { "name": "FICHAS_STORAGE", "class_name": "FichasStorage" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["PainelStorage"] }
+    { "tag": "v1", "new_sqlite_classes": ["PainelStorage"] },
+    { "tag": "v2", "new_sqlite_classes": ["FichasStorage"] }
   ]
 }

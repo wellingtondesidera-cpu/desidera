@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Credenciamento — Helbor Vendas</title>
+<style>
+  :root{
+    --azul-helbor: #0B3B6F;
+    --azul-escuro: #072a52;
+    --ciano-helbor: #00AEEF;
+    --papel: #F7F8FA;
+    --linha: #D9DFE7;
+    --texto: #1C2530;
+    --texto-suave: #5B6675;
+    --branco: #FFFFFF;
+    --erro: #C0392B;
+    --ok: #1E8F5F;
+    --raio: 3px;
+    --serif: "Source Serif Pro", Georgia, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--papel);
+    color: var(--texto);
+    font-family: var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .folha{
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--branco);
+  }
+
+  /* ---------- Cabeçalho ---------- */
+  .cabecalho{
+    background: var(--azul-helbor);
+    background-image: linear-gradient(135deg, var(--azul-escuro) 0%, var(--azul-helbor) 60%, #0e4a86 100%);
+    color: var(--branco);
+    padding: 40px 36px 34px;
+    position: relative;
+    overflow:hidden;
+  }
+  .cabecalho::after{
+    content:"";
+    position:absolute;
+    right:-60px; top:-60px;
+    width:220px; height:220px;
+    border-radius:50%;
+    background: rgba(0,174,239,0.16);
+  }
+  .marca{
+    display:flex; align-items:baseline; gap:10px;
+    font-family: var(--serif);
+    font-weight:600; font-size:26px; letter-spacing:0.2px;
+    position:relative; z-index:1;
+  }
+  .marca span{
+    font-family: var(--sans); font-weight:400; font-size:13px;
+    color: var(--ciano-helbor); letter-spacing:1.5px; text-transform:lowercase;
+  }
+  .titulo-form{
+    margin-top:22px; font-family: var(--serif); font-weight:600;
+    font-size: 30px; position:relative; z-index:1; max-width:480px;
+  }
+  .subtitulo-form{
+    margin-top:8px; font-size:14.5px; color:#CFE4F5; max-width:460px;
+    position:relative; z-index:1;
+  }
+
+  /* ---------- Progresso ---------- */
+  .progresso-wrap{
+    background: var(--azul-escuro);
+    padding: 14px 36px 18px;
+  }
+  .progresso-trilha{
+    height:4px; background: rgba(255,255,255,0.18); border-radius:2px; overflow:hidden;
+  }
+  .progresso-barra{
+    height:100%; width:0%; background: var(--ciano-helbor);
+    transition: width .35s ease;
+  }
+  .progresso-legenda{
+    display:flex; justify-content:space-between;
+    font-size:12px; color:#9FC4E8; margin-top:8px;
+  }
+
+  /* ---------- Corpo ---------- */
+  .corpo{ padding: 8px 36px 10px; }
+
+  .secao{
+    padding: 30px 0 8px;
+    border-bottom: 1px solid var(--linha);
+  }
+  .secao:last-of-type{ border-bottom:none; }
+
+  .secao-cabeca{
+    display:flex; align-items:baseline; gap:12px; margin-bottom:4px;
+  }
+  .secao-numero{
+    font-family: var(--serif); font-size:15px; color: var(--ciano-helbor); font-weight:600;
+  }
+  .secao-titulo{
+    font-family: var(--serif); font-size:19px; font-weight:600; color: var(--azul-escuro);
+  }
+  .secao-nota{
+    font-size:13px; color: var(--texto-suave); margin: 2px 0 20px 27px; max-width: 520px;
+  }
+
+  .grade{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 16px 20px;
+    margin-left: 0;
+  }
+  .grade.tres{ grid-template-columns: 1fr 1fr 1fr; }
+  .campo-largo{ grid-column: 1 / -1; }
+
+  @media (max-width: 620px){
+    .grade, .grade.tres{ grid-template-columns: 1fr; }
+    .cabecalho, .corpo, .progresso-wrap{ padding-left:20px; padding-right:20px; }
+  }
+
+  .campo{ display:flex; flex-direction:column; gap:6px; }
+  .campo label{
+    font-size:12.5px; font-weight:600; color: var(--azul-escuro);
+    letter-spacing:0.1px;
+  }
+  .campo label .req{ color: var(--erro); font-weight:700; }
+
+  input[type="text"], input[type="email"], input[type="tel"], input[type="date"],
+  select, textarea{
+    font-family: var(--sans);
+    font-size:14.5px;
+    padding: 10px 12px;
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    background: var(--branco);
+    color: var(--texto);
+    width:100%;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline: none;
+    border-color: var(--ciano-helbor);
+    box-shadow: 0 0 0 3px rgba(0,174,239,0.16);
+  }
+  textarea{ resize: vertical; min-height: 90px; font-size:14.5px; }
+
+  .campo.invalido input, .campo.invalido select, .campo.invalido textarea{
+    border-color: var(--erro);
+    background: #FDF3F2;
+  }
+  .campo.invalido .upload-caixa{ border-color: var(--erro); background: #FDF3F2; }
+  .msg-erro{
+    font-size:12px; color: var(--erro); display:none;
+  }
+  .campo.invalido .msg-erro{ display:block; }
+
+  fieldset{ border:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+  legend{
+    font-size:12.5px; font-weight:600; color: var(--azul-escuro); padding:0; margin-bottom:2px;
+  }
+  .radios{ display:flex; gap:18px; flex-wrap:wrap; padding-top:2px; }
+  .radios label{
+    font-size:14px; font-weight:400; color: var(--texto);
+    display:flex; align-items:center; gap:7px; cursor:pointer;
+  }
+  input[type="radio"], input[type="checkbox"]{ accent-color: var(--azul-helbor); width:16px; height:16px; }
+
+  /* ---------- Bloco de experiência repetível ---------- */
+  .experiencia{
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+    padding: 18px 18px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    background: #FBFCFD;
+  }
+  .experiencia-rotulo{
+    font-size:12px; font-weight:700; color: var(--ciano-helbor); text-transform:uppercase;
+    letter-spacing:0.6px; margin-bottom:14px;
+  }
+  .remover-exp{
+    position:absolute; top:14px; right:14px;
+    border:none; background:none; color: var(--texto-suave);
+    font-size:12.5px; cursor:pointer; text-decoration:underline;
+  }
+  .remover-exp:hover{ color: var(--erro); }
+  #lista-experiencias .experiencia:first-child .remover-exp{ display:none; }
+
+  .btn-secundario{
+    border:1px dashed #9DB3C8; background: var(--branco); color: var(--azul-helbor);
+    font-family: var(--sans); font-size:13.5px; font-weight:600;
+    padding: 10px 16px; border-radius: var(--raio); cursor:pointer;
+    width:100%; text-align:center;
+  }
+  .btn-secundario:hover{ background:#EFF6FB; }
+
+  .contagem{
+    font-size:11.5px; color: var(--texto-suave); text-align:right; margin-top:4px;
+  }
+
+  /* ---------- Upload de documentos ---------- */
+  .upload-caixa{
+    border: 1.5px dashed var(--linha);
+    border-radius: var(--raio);
+    background: #FBFCFD;
+    padding: 16px;
+    display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .upload-caixa:hover{ border-color: var(--ciano-helbor); background:#F2F9FD; }
+  .upload-caixa input[type="file"]{ display:none; }
+  .upload-icone{
+    width:38px; height:38px; flex-shrink:0; border-radius:50%;
+    background: var(--azul-helbor); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:17px;
+  }
+  .upload-texto{ display:flex; flex-direction:column; gap:2px; }
+  .upload-titulo{ font-size:13.5px; font-weight:600; color: var(--azul-escuro); }
+  .upload-subtitulo{ font-size:12px; color: var(--texto-suave); }
+  .upload-nome-arquivo{ font-size:12.5px; color: var(--ok); font-weight:600; }
+  .upload-caixa.preenchida{ border-style:solid; border-color: var(--ok); background:#F1FAF5; }
+  .upload-caixa.preenchida .upload-icone{ background: var(--ok); }
+
+  /* ---------- Declaração e envio ---------- */
+  .declaracao{
+    background: #F2F7FB;
+    border-left: 3px solid var(--ciano-helbor);
+    padding: 16px 18px;
+    font-size:13.5px;
+    color: var(--texto);
+    border-radius: 0 var(--raio) var(--raio) 0;
+  }
+  .declaracao label{ display:flex; gap:10px; align-items:flex-start; cursor:pointer; }
+  .declaracao input{ margin-top:3px; flex-shrink:0; }
+
+  .rodape-acoes{
+    padding: 30px 0 44px;
+    display:flex; flex-direction:column; gap:14px; align-items:center;
+  }
+  .btn-enviar{
+    background: var(--azul-helbor);
+    color: var(--branco);
+    border:none; font-family: var(--sans); font-weight:700; font-size:15px;
+    padding: 14px 36px; border-radius: var(--raio); cursor:pointer;
+    width:100%; max-width:340px;
+    transition: background .15s ease;
+  }
+  .btn-enviar:hover{ background: var(--azul-escuro); }
+  .aviso-envio{ font-size:12px; color: var(--texto-suave); text-align:center; max-width:420px; }
+
+  /* ---------- Tela de resumo/confirmação ---------- */
+  .tela-resumo{ display:none; padding: 40px 36px 50px; }
+  .tela-resumo.ativa{ display:block; }
+  .corpo.oculto{ display:none; }
+  .progresso-wrap.oculto{ display:none; }
+
+  .resumo-cabeca{ text-align:center; margin-bottom: 30px; }
+  .resumo-marca-ok{
+    width:52px; height:52px; border-radius:50%;
+    background: var(--ok); color:#fff; display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 16px; font-size:24px;
+  }
+  .resumo-titulo{ font-family: var(--serif); font-size:24px; color: var(--azul-escuro); margin-bottom:8px; }
+  .resumo-sub{ font-size:14px; color: var(--texto-suave); }
+
+  .resumo-bloco{ margin-bottom: 22px; }
+  .resumo-bloco h3{
+    font-family: var(--serif); font-size:15px; color: var(--ciano-helbor);
+    border-bottom:1px solid var(--linha); padding-bottom:8px; margin-bottom:12px;
+  }
+  .resumo-linha{
+    display:flex; justify-content:space-between; gap:16px;
+    font-size:13.5px; padding: 5px 0; border-bottom: 1px dotted #E7EBF0;
+  }
+  .resumo-linha dt{ color: var(--texto-suave); flex-shrink:0; }
+  .resumo-linha dd{ margin:0; text-align:right; font-weight:500; }
+
+  .resumo-acoes{ display:flex; gap:12px; justify-content:center; margin-top:30px; flex-wrap:wrap; }
+  .btn-outline{
+    border:1px solid var(--azul-helbor); background:var(--branco); color:var(--azul-helbor);
+    font-weight:600; font-size:13.5px; padding:11px 22px; border-radius:var(--raio); cursor:pointer;
+  }
+
+  @media print{
+    .progresso-wrap, .rodape-acoes, .btn-secundario, .remover-exp, .resumo-acoes, .link-admin, .whatsapp-bloco{ display:none !important; }
+  }
+
+  /* ---------- Botão admin ---------- */
+  .link-admin{
+    position:relative; z-index:1; margin-top:18px;
+    background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.35);
+    color:#fff; font-family: var(--sans); font-size:12.5px; font-weight:600;
+    padding:8px 14px; border-radius:var(--raio); cursor:pointer;
+  }
+  .link-admin:hover{ background: rgba(255,255,255,0.2); }
+
+  /* ---------- WhatsApp ---------- */
+  .whatsapp-bloco{
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--linha);
+    text-align:center;
+  }
+  .whatsapp-titulo{ font-size:13px; color: var(--texto-suave); margin-bottom:14px; }
+  .whatsapp-botoes{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn-whatsapp{
+    display:inline-flex; align-items:center; gap:8px;
+    background:#25D366; color:#fff; text-decoration:none;
+    font-family: var(--sans); font-weight:600; font-size:13.5px;
+    padding:11px 20px; border-radius:var(--raio);
+  }
+  .btn-whatsapp:hover{ background:#1EBE5A; }
+  .whatsapp-aviso{
+    font-size:11.5px; color: var(--texto-suave); margin-top:12px; max-width:440px;
+    margin-left:auto; margin-right:auto;
+  }
+
+  /* ---------- Painel admin ---------- */
+  .painel-admin{ display:none; padding: 36px; }
+  .painel-admin.ativo{ display:block; }
+  .admin-cabeca{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;
+    gap:12px; flex-wrap:wrap;
+  }
+  .admin-titulo{ font-family: var(--serif); font-size:22px; color: var(--azul-escuro); }
+  .admin-sub{ font-size:12.5px; color: var(--texto-suave); margin-top:4px; }
+  .lista-fichas{ display:flex; flex-direction:column; gap:10px; }
+  .item-ficha{
+    border:1px solid var(--linha); border-radius: var(--raio);
+    padding:14px 16px; cursor:pointer; background:#FBFCFD;
+  }
+  .item-ficha:hover{ border-color: var(--ciano-helbor); }
+  .item-ficha-topo{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .item-ficha-nome{ font-weight:700; font-size:14px; color: var(--azul-escuro); }
+  .item-ficha-data{ font-size:12px; color: var(--texto-suave); }
+  .item-ficha-sub{ font-size:12.5px; color: var(--texto-suave); margin-top:4px; }
+  .item-ficha-detalhe{ display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--linha); }
+  .item-ficha.aberto .item-ficha-detalhe{ display:block; }
+  .admin-vazio{ text-align:center; padding:40px 0; color: var(--texto-suave); font-size:14px; }
+
+  /* ---------- Modelo oculto para geração do PDF (fiel ao layout original) ---------- */
+  #pdf-render-area{
+    position:fixed; top:0; left:-11000px; z-index:-1;
+  }
+  .pdf-pagina{
+    width:794px; min-height:1123px; background:#fff;
+    padding:50px 56px; box-sizing:border-box;
+    font-family: var(--sans); color:#1C2530;
+  }
+  .pdf-marca{ font-family: var(--serif); font-weight:700; font-size:22px; color: var(--azul-helbor); }
+  .pdf-marca span{ font-size:11px; color: var(--ciano-helbor); font-weight:400; margin-left:6px; }
+  .pdf-titulo{ font-family: var(--serif); font-size:25px; font-weight:700; color: var(--azul-escuro); margin:16px 0 16px; }
+  .pdf-linha-azul{ height:3px; background: var(--ciano-helbor); width:100%; margin-bottom:8px; }
+  .pdf-secao-titulo{
+    font-family: var(--serif); font-weight:700; font-size:14.5px; color: var(--azul-helbor);
+    border-bottom:2px solid var(--ciano-helbor); padding-bottom:6px; margin:26px 0 14px;
+  }
+  .pdf-grade{ display:grid; grid-template-columns:1fr 1fr; gap:11px 18px; }
+  .pdf-campo{ display:flex; flex-direction:column; gap:3px; }
+  .pdf-campo.largo{ grid-column:1/-1; }
+  .pdf-rotulo{ font-size:10px; color:#5B6675; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+  .pdf-valor{ font-size:12.5px; background:#EEF1F4; border-radius:2px; padding:7px 10px; min-height:16px; word-break:break-word; }
+  .pdf-exp-bloco{ border:1px solid #D9DFE7; border-radius:3px; padding:12px 14px; margin-bottom:10px; }
+  .pdf-exp-rotulo{ font-size:10.5px; font-weight:700; color: var(--ciano-helbor); text-transform:uppercase; margin-bottom:8px; }
+  .pdf-declaracao{ margin-top:20px; font-size:12.5px; background:#F2F7FB; border-left:3px solid var(--ciano-helbor); padding:14px 16px; }
+  .pdf-linha-assinatura{ border-top:1px solid #1C2530; width:280px; margin:70px auto 6px; }
+  .pdf-assinatura-legenda{ text-align:center; font-size:11px; color:#5B6675; }
+  .pdf-anexo-titulo{ font-family: var(--serif); font-size:18px; color: var(--azul-escuro); margin-bottom:20px; text-align:center; }
+  .pdf-anexo-imagem{ display:block; max-width:100%; max-height:920px; margin:0 auto; border:1px solid #D9DFE7; }
+</style>
+</head>
+<body>
+
+<div class="folha">
+
+  <div class="cabecalho">
+    <div class="marca">Helbor <span>vendas</span></div>
+    <div class="titulo-form">Ficha de Credenciamento</div>
+    <div class="subtitulo-form">Preencha seus dados para iniciar o processo de credenciamento como corretor parceiro. Todos os campos são obrigatórios.</div>
+  </div>
+
+  <div class="progresso-wrap" id="progresso-wrap">
+    <div class="progresso-trilha"><div class="progresso-barra" id="progresso-barra"></div></div>
+    <div class="progresso-legenda">
+      <span id="progresso-texto">0% preenchido</span>
+      <span>Etapa única</span>
+    </div>
+  </div>
+
+  <div class="corpo" id="corpo-form">
+  <form id="ficha" novalidate>
+
+    <!-- 1. Dados pessoais -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">01</span><span class="secao-titulo">Dados pessoais</span></div>
+      <p class="secao-nota">Informações básicas de identificação.</p>
+      <div class="grade">
+        <div class="campo campo-largo" data-obrigatorio>
+          <label for="nome">Nome completo <span class="req">*</span></label>
+          <input type="text" id="nome" name="nome" required>
+          <span class="msg-erro">Informe o nome completo.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="apelido1">1ª sugestão de apelido <span class="req">*</span></label>
+          <input type="text" id="apelido1" name="apelido1" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="apelido2">2ª sugestão de apelido <span class="req">*</span></label>
+          <input type="text" id="apelido2" name="apelido2" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="equipe">Equipe <span class="req">*</span></label>
+          <input type="text" id="equipe" name="equipe" placeholder="ex.: Equipe Desiderá" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="apelidoEscolhido">Apelido escolhido <span class="req">*</span></label>
+          <input type="text" id="apelidoEscolhido" name="apelidoEscolhido" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="nascimento">Data de nascimento <span class="req">*</span></label>
+          <input type="date" id="nascimento" name="nascimento" required>
+          <span class="msg-erro">Informe a data de nascimento.</span>
+        </div>
+        <div class="campo" data-obrigatorio data-tipo="radio" data-grupo="sexo">
+          <fieldset>
+            <legend>Sexo <span class="req">*</span></legend>
+            <div class="radios">
+              <label><input type="radio" name="sexo" value="Feminino" required> Feminino</label>
+              <label><input type="radio" name="sexo" value="Masculino" required> Masculino</label>
+              <label><input type="radio" name="sexo" value="Outros" required> Outros</label>
+            </div>
+          </fieldset>
+          <span class="msg-erro">Selecione uma opção.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="estadoCivil">Estado civil <span class="req">*</span></label>
+          <select id="estadoCivil" name="estadoCivil" required>
+            <option value="">Selecione</option>
+            <option>Solteiro(a)</option>
+            <option>Casado(a)</option>
+            <option>União estável</option>
+            <option>Divorciado(a)</option>
+            <option>Viúvo(a)</option>
+          </select>
+          <span class="msg-erro">Selecione uma opção.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="naturalidade">Naturalidade <span class="req">*</span></label>
+          <input type="text" id="naturalidade" name="naturalidade" placeholder="Cidade - UF" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="nacionalidade">Nacionalidade <span class="req">*</span></label>
+          <input type="text" id="nacionalidade" name="nacionalidade" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo campo-largo" data-obrigatorio>
+          <label for="email">E-mail <span class="req">*</span></label>
+          <input type="email" id="email" name="email" required>
+          <span class="msg-erro">Informe um e-mail válido.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="categoria">Categoria <span class="req">*</span></label>
+          <select id="categoria" name="categoria" required>
+            <option value="">Selecione</option>
+            <option>Salão</option>
+            <option>Equipe própria</option>
+            <option>Autônomo</option>
+          </select>
+          <span class="msg-erro">Selecione uma opção.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Documentos -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">02</span><span class="secao-titulo">Documentos</span></div>
+      <p class="secao-nota">Dados usados para o cadastro formal junto à incorporadora.</p>
+      <div class="grade">
+        <div class="campo" data-obrigatorio>
+          <label for="cpf">CPF <span class="req">*</span></label>
+          <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required>
+          <span class="msg-erro">Informe o CPF.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="rg">RG / órgão expedidor <span class="req">*</span></label>
+          <input type="text" id="rg" name="rg" placeholder="Ex.: 00.000.000-0 SSP/SP" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="dataExpedicao">Data de expedição <span class="req">*</span></label>
+          <input type="date" id="dataExpedicao" name="dataExpedicao" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="creci">CRECI <span class="req">*</span></label>
+          <input type="text" id="creci" name="creci" required>
+          <span class="msg-erro">Informe o número do CRECI.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Residência -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">03</span><span class="secao-titulo">Residência</span></div>
+      <div class="grade">
+        <div class="campo campo-largo" data-obrigatorio>
+          <label for="endereco">Endereço, nº <span class="req">*</span></label>
+          <input type="text" id="endereco" name="endereco" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="bairro">Bairro <span class="req">*</span></label>
+          <input type="text" id="bairro" name="bairro" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="cep">CEP <span class="req">*</span></label>
+          <input type="text" id="cep" name="cep" placeholder="00000-000" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="cidadeUf">Cidade - UF <span class="req">*</span></label>
+          <input type="text" id="cidadeUf" name="cidadeUf" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="telCelular">Telefone celular <span class="req">*</span></label>
+          <input type="tel" id="telCelular" name="telCelular" placeholder="(11) 90000-0000" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo">
+          <label for="telResidencial">Telefone residencial</label>
+          <input type="tel" id="telResidencial" name="telResidencial">
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="telEmergencia">Telefone de emergência <span class="req">*</span></label>
+          <input type="tel" id="telEmergencia" name="telEmergencia" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo">
+          <label for="nomeMae">Nome da mãe</label>
+          <input type="text" id="nomeMae" name="nomeMae">
+        </div>
+        <div class="campo">
+          <label for="nomePai">Nome do pai</label>
+          <input type="text" id="nomePai" name="nomePai">
+        </div>
+        <div class="campo">
+          <label for="nomeConjuge">Nome do cônjuge</label>
+          <input type="text" id="nomeConjuge" name="nomeConjuge" placeholder="Ex.: Não se aplica">
+        </div>
+        <div class="campo">
+          <label for="numFilhos">Nº de filhos</label>
+          <input type="text" id="numFilhos" name="numFilhos" placeholder="Ex.: Não possui / 2">
+        </div>
+        <div class="campo">
+          <label for="idadeFilhos">Idade dos filhos</label>
+          <input type="text" id="idadeFilhos" name="idadeFilhos" placeholder="Ex.: Não se aplica">
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Pesquisa -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">04</span><span class="secao-titulo">Pesquisa</span></div>
+      <div class="grade">
+        <div class="campo" data-obrigatorio data-tipo="radio" data-grupo="veiculo">
+          <fieldset>
+            <legend>Possui veículo próprio? <span class="req">*</span></legend>
+            <div class="radios">
+              <label><input type="radio" name="veiculo" value="Sim" required> Sim</label>
+              <label><input type="radio" name="veiculo" value="Não" required> Não</label>
+            </div>
+          </fieldset>
+          <span class="msg-erro">Selecione uma opção.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="indicadoPor">Foi indicado por algum corretor? Se sim, quem? <span class="req">*</span></label>
+          <input type="text" id="indicadoPor" name="indicadoPor" placeholder="Não / Nome do corretor" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="tempoArea">Quanto tempo trabalha na área? <span class="req">*</span></label>
+          <input type="text" id="tempoArea" name="tempoArea" placeholder="Ex.: Sem experiência / 3 anos" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label for="siteCaptacao">Possui algum site de captação? <span class="req">*</span></label>
+          <input type="text" id="siteCaptacao" name="siteCaptacao" placeholder="Não / URL" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo campo-largo" data-obrigatorio>
+          <label for="meiosCaptacao">Quais meios de captação de clientes utiliza? <span class="req">*</span></label>
+          <input type="text" id="meiosCaptacao" name="meiosCaptacao" placeholder="Ex.: Instagram, indicação, portais" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Formação acadêmica e profissional -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">05</span><span class="secao-titulo">Formação acadêmica e profissional</span></div>
+      <div class="grade">
+        <div class="campo">
+          <label for="ensinoMedio">Ensino médio</label>
+          <select id="ensinoMedio" name="ensinoMedio">
+            <option value="">Selecione</option>
+            <option>Completo</option>
+            <option>Incompleto</option>
+            <option>Não tem</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="instMedio">Nome da instituição</label>
+          <input type="text" id="instMedio" name="instMedio" placeholder="Ex.: Não se aplica">
+        </div>
+        <div class="campo">
+          <label for="ensinoSuperior">Ensino superior</label>
+          <select id="ensinoSuperior" name="ensinoSuperior">
+            <option value="">Selecione</option>
+            <option>Completo</option>
+            <option>Incompleto</option>
+            <option>Cursando</option>
+            <option>Não tem</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="instSuperior">Nome da instituição</label>
+          <input type="text" id="instSuperior" name="instSuperior" placeholder="Ex.: Não se aplica">
+        </div>
+        <div class="campo">
+          <label for="posGraduacao">Pós-graduação</label>
+          <select id="posGraduacao" name="posGraduacao">
+            <option value="">Selecione</option>
+            <option>Completo</option>
+            <option>Incompleto</option>
+            <option>Cursando</option>
+            <option>Não tem</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="instPos">Nome da instituição</label>
+          <input type="text" id="instPos" name="instPos" placeholder="Ex.: Não se aplica">
+        </div>
+        <div class="campo campo-largo">
+          <label for="outrosCursos">Outros cursos profissionais</label>
+          <textarea id="outrosCursos" name="outrosCursos" placeholder="Um curso por linha, ou 'Não possui'"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Experiências profissionais -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">06</span><span class="secao-titulo">Experiências profissionais</span></div>
+      <p class="secao-nota">Liste as experiências mais recentes primeiro. É obrigatório informar ao menos uma experiência completa.</p>
+
+      <div id="lista-experiencias"></div>
+      <button type="button" class="btn-secundario" id="add-experiencia">+ Adicionar experiência profissional</button>
+    </section>
+
+    <!-- 7. Motivação -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">07</span><span class="secao-titulo">Por que gostaria de ser credenciado</span></div>
+      <div class="grade">
+        <div class="campo campo-largo" data-obrigatorio>
+          <textarea id="motivacao" name="motivacao" maxlength="600" placeholder="Conte um pouco sobre sua motivação para atuar como corretor credenciado Helbor." required></textarea>
+          <div class="contagem"><span id="contagem-motivacao">0</span>/600</div>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Atividade autônoma -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">08</span><span class="secao-titulo">Atividade autônoma</span></div>
+      <p class="secao-nota">Descreva com suas próprias palavras como funciona a atividade autônoma de corretor de imóveis e sobre trabalhar comissionado 100% pelo cliente adquirente do produto.</p>
+      <div class="grade">
+        <div class="campo campo-largo" data-obrigatorio>
+          <textarea id="atividadeAutonoma" name="atividadeAutonoma" required style="min-height:130px"></textarea>
+          <span class="msg-erro">Este campo é obrigatório.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Anexos de documentos -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">09</span><span class="secao-titulo">Anexar documentos</span></div>
+      <p class="secao-nota">Envie fotos legíveis ou o arquivo em PDF. Formatos aceitos: JPG, PNG ou PDF.</p>
+      <div class="grade">
+
+        <div class="campo campo-largo" data-obrigatorio data-tipo="arquivo">
+          <label>RG ou CNH <span class="req">*</span></label>
+          <label class="upload-caixa" for="arq_rgCnh">
+            <span class="upload-icone">⬆</span>
+            <span class="upload-texto">
+              <span class="upload-titulo">Anexar RG ou CNH</span>
+              <span class="upload-subtitulo" data-padrao>Clique para selecionar o arquivo</span>
+            </span>
+          </label>
+          <input type="file" id="arq_rgCnh" name="arq_rgCnh" accept=".jpg,.jpeg,.png,.pdf" required>
+          <span class="msg-erro">Anexe uma cópia do RG ou CNH.</span>
+        </div>
+
+        <div class="campo campo-largo" data-obrigatorio data-tipo="arquivo">
+          <label>CRECI <span class="req">*</span></label>
+          <label class="upload-caixa" for="arq_creci">
+            <span class="upload-icone">⬆</span>
+            <span class="upload-texto">
+              <span class="upload-titulo">Anexar carteira do CRECI</span>
+              <span class="upload-subtitulo" data-padrao>Clique para selecionar o arquivo</span>
+            </span>
+          </label>
+          <input type="file" id="arq_creci" name="arq_creci" accept=".jpg,.jpeg,.png,.pdf" required>
+          <span class="msg-erro">Anexe uma cópia do CRECI.</span>
+        </div>
+
+        <div class="campo campo-largo" data-obrigatorio data-tipo="arquivo">
+          <label>Comprovante de endereço <span class="req">*</span></label>
+          <label class="upload-caixa" for="arq_comprovante">
+            <span class="upload-icone">⬆</span>
+            <span class="upload-texto">
+              <span class="upload-titulo">Anexar comprovante de endereço</span>
+              <span class="upload-subtitulo" data-padrao>Emitido nos últimos 3 meses</span>
+            </span>
+          </label>
+          <input type="file" id="arq_comprovante" name="arq_comprovante" accept=".jpg,.jpeg,.png,.pdf" required>
+          <span class="msg-erro">Anexe o comprovante de endereço.</span>
+        </div>
+
+        <div class="campo campo-largo" data-obrigatorio data-tipo="arquivo">
+          <label>Foto para crachá <span class="req">*</span></label>
+          <label class="upload-caixa" for="arq_foto">
+            <span class="upload-icone">⬆</span>
+            <span class="upload-texto">
+              <span class="upload-titulo">Anexar foto para crachá</span>
+              <span class="upload-subtitulo" data-padrao>Foto 3x4 ou similar, fundo neutro</span>
+            </span>
+          </label>
+          <input type="file" id="arq_foto" name="arq_foto" accept=".jpg,.jpeg,.png" required>
+          <span class="msg-erro">Anexe a foto para o crachá.</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 10. Declaração -->
+    <section class="secao">
+      <div class="secao-cabeca"><span class="secao-numero">10</span><span class="secao-titulo">Declaração</span></div>
+      <div class="declaracao">
+        <label>
+          <input type="checkbox" id="declaracao" name="declaracao" required>
+          <span>Declaro que todas as informações fornecidas nesta ficha são verdadeiras.</span>
+        </label>
+      </div>
+    </section>
+
+    <div class="rodape-acoes">
+      <button type="submit" class="btn-enviar">Enviar ficha de credenciamento</button>
+      <div class="aviso-envio">Ao clicar, a ficha é enviada automaticamente: o PDF completo (com os documentos anexados) é baixado no seu aparelho e o WhatsApp já abre com a mensagem pronta — só falta anexar o PDF baixado e apertar enviar.</div>
+    </div>
+
+  </form>
+  </div>
+
+  <!-- Tela de confirmação -->
+  <div class="tela-resumo" id="tela-resumo">
+    <div class="resumo-cabeca">
+      <div class="resumo-marca-ok">✓</div>
+      <div class="resumo-titulo">Ficha enviada</div>
+      <div class="resumo-sub">O PDF foi baixado e o WhatsApp foi aberto com a mensagem pronta.</div>
+    </div>
+
+    <div class="whatsapp-bloco">
+      <div class="whatsapp-titulo">Falta só anexar o PDF baixado na conversa que abriu e apertar enviar</div>
+      <div class="whatsapp-aviso" style="margin-top:0;">Por segurança dos navegadores, não é possível anexar o arquivo automaticamente no WhatsApp — esse é o único passo manual. O nome do arquivo baixado começa com "ficha-credenciamento-".</div>
+      <div class="whatsapp-botoes" style="margin-top:16px;">
+        <a href="#" id="wpp-helbor" class="btn-whatsapp" target="_blank" rel="noopener">📤 Abrir WhatsApp da Helbor novamente</a>
+        <button type="button" class="btn-outline" id="btn-baixar-pdf-novamente">Baixar o PDF novamente</button>
+      </div>
+    </div>
+
+    <div id="resumo-conteudo"></div>
+  </div>
+
+</div>
+
+  <!-- Modelo oculto usado para gerar o PDF final (mesmo layout da ficha original) -->
+  <div id="pdf-render-area">
+    <div class="pdf-pagina" id="pdf-pagina-1">
+      <div class="pdf-marca">Helbor <span>vendas</span></div>
+      <div class="pdf-titulo">Ficha de Credenciamento</div>
+      <div class="pdf-linha-azul"></div>
+
+      <div class="pdf-secao-titulo">Dados Pessoais</div>
+      <div class="pdf-grade">
+        <div class="pdf-campo largo"><div class="pdf-rotulo">Nome completo</div><div class="pdf-valor" data-campo="nome"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">1ª sugestão de apelido</div><div class="pdf-valor" data-campo="apelido1"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">2ª sugestão de apelido</div><div class="pdf-valor" data-campo="apelido2"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Equipe</div><div class="pdf-valor" data-campo="equipe"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Apelido escolhido</div><div class="pdf-valor" data-campo="apelidoEscolhido"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Data de nascimento</div><div class="pdf-valor" data-campo="nascimento"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Sexo</div><div class="pdf-valor" data-campo="sexo"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Estado civil</div><div class="pdf-valor" data-campo="estadoCivil"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Naturalidade</div><div class="pdf-valor" data-campo="naturalidade"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Nacionalidade</div><div class="pdf-valor" data-campo="nacionalidade"></div></div>
+        <div class="pdf-campo largo"><div class="pdf-rotulo">E-mail</div><div class="pdf-valor" data-campo="email"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Categoria</div><div class="pdf-valor" data-campo="categoria"></div></div>
+      </div>
+
+      <div class="pdf-secao-titulo">Documentos</div>
+      <div class="pdf-grade">
+        <div class="pdf-campo"><div class="pdf-rotulo">CPF</div><div class="pdf-valor" data-campo="cpf"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">RG / órgão expedidor</div><div class="pdf-valor" data-campo="rg"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Data de expedição</div><div class="pdf-valor" data-campo="dataExpedicao"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">CRECI</div><div class="pdf-valor" data-campo="creci"></div></div>
+      </div>
+    </div>
+
+    <div class="pdf-pagina" id="pdf-pagina-2">
+      <div class="pdf-marca">Helbor <span>vendas</span></div>
+      <div class="pdf-titulo">Ficha de Credenciamento</div>
+      <div class="pdf-linha-azul"></div>
+
+      <div class="pdf-secao-titulo">Residência</div>
+      <div class="pdf-grade">
+        <div class="pdf-campo largo"><div class="pdf-rotulo">Endereço, nº</div><div class="pdf-valor" data-campo="endereco"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Bairro</div><div class="pdf-valor" data-campo="bairro"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">CEP</div><div class="pdf-valor" data-campo="cep"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Cidade - UF</div><div class="pdf-valor" data-campo="cidadeUf"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Telefone celular</div><div class="pdf-valor" data-campo="telCelular"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Telefone residencial</div><div class="pdf-valor" data-campo="telResidencial"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Telefone de emergência</div><div class="pdf-valor" data-campo="telEmergencia"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Nome da mãe</div><div class="pdf-valor" data-campo="nomeMae"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Nome do pai</div><div class="pdf-valor" data-campo="nomePai"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Nome do cônjuge</div><div class="pdf-valor" data-campo="nomeConjuge"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Nº de filhos</div><div class="pdf-valor" data-campo="numFilhos"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Idade dos filhos</div><div class="pdf-valor" data-campo="idadeFilhos"></div></div>
+      </div>
+
+      <div class="pdf-secao-titulo">Pesquisa</div>
+      <div class="pdf-grade">
+        <div class="pdf-campo"><div class="pdf-rotulo">Possui veículo próprio?</div><div class="pdf-valor" data-campo="veiculo"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Indicado por corretor</div><div class="pdf-valor" data-campo="indicadoPor"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Tempo na área</div><div class="pdf-valor" data-campo="tempoArea"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Site de captação</div><div class="pdf-valor" data-campo="siteCaptacao"></div></div>
+        <div class="pdf-campo largo"><div class="pdf-rotulo">Meios de captação</div><div class="pdf-valor" data-campo="meiosCaptacao"></div></div>
+      </div>
+    </div>
+
+    <div class="pdf-pagina" id="pdf-pagina-3">
+      <div class="pdf-marca">Helbor <span>vendas</span></div>
+      <div class="pdf-titulo">Ficha de Credenciamento</div>
+      <div class="pdf-linha-azul"></div>
+
+      <div class="pdf-secao-titulo">Formação Acadêmica e Profissional</div>
+      <div class="pdf-grade">
+        <div class="pdf-campo"><div class="pdf-rotulo">Ensino médio</div><div class="pdf-valor" data-campo="ensinoMedio"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Instituição</div><div class="pdf-valor" data-campo="instMedio"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Ensino superior</div><div class="pdf-valor" data-campo="ensinoSuperior"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Instituição</div><div class="pdf-valor" data-campo="instSuperior"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Pós-graduação</div><div class="pdf-valor" data-campo="posGraduacao"></div></div>
+        <div class="pdf-campo"><div class="pdf-rotulo">Instituição</div><div class="pdf-valor" data-campo="instPos"></div></div>
+        <div class="pdf-campo largo"><div class="pdf-rotulo">Outros cursos profissionais</div><div class="pdf-valor" data-campo="outrosCursos"></div></div>
+      </div>
+
+      <div class="pdf-secao-titulo">Experiências Profissionais</div>
+      <div id="pdf-experiencias"></div>
+    </div>
+
+    <div class="pdf-pagina" id="pdf-pagina-4">
+      <div class="pdf-marca">Helbor <span>vendas</span></div>
+      <div class="pdf-titulo">Ficha de Credenciamento</div>
+      <div class="pdf-linha-azul"></div>
+
+      <div class="pdf-secao-titulo">Porque que gostaria de ser credenciado</div>
+      <div class="pdf-valor" data-campo="motivacao" style="min-height:70px;"></div>
+
+      <div class="pdf-secao-titulo">Descreva com suas próprias palavras a respeito de como funciona a atividade autônoma de corretor de imóveis e sobre trabalhar sendo comissionado 100% pelo cliente adquirente do produto</div>
+      <div class="pdf-valor" data-campo="atividadeAutonoma" style="min-height:140px;"></div>
+
+      <div class="pdf-declaracao">Eu, <strong data-campo="nomeDeclaracao"></strong>, declaro que todas as informações acima são verdadeiras.</div>
+      <div class="pdf-linha-assinatura"></div>
+      <div class="pdf-assinatura-legenda">Assinatura do Credenciado</div>
+    </div>
+
+    <div id="pdf-anexos-paginas"></div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+(function(){
+  const form = document.getElementById('ficha');
+  const listaExp = document.getElementById('lista-experiencias');
+  const addExpBtn = document.getElementById('add-experiencia');
+  let expCount = 0;
+
+  function novaExperiencia(){
+    expCount++;
+    const idx = expCount;
+    const wrap = document.createElement('div');
+    wrap.className = 'experiencia';
+    wrap.dataset.idx = idx;
+    wrap.innerHTML = `
+      <button type="button" class="remover-exp">Remover</button>
+      <div class="experiencia-rotulo">Experiência ${idx}</div>
+      <div class="grade">
+        <div class="campo campo-largo" data-obrigatorio>
+          <label>Empresa <span class="req">*</span></label>
+          <input type="text" name="exp_empresa_${idx}" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label>Forma de contratação <span class="req">*</span></label>
+          <input type="text" name="exp_contratacao_${idx}" placeholder="CLT, PJ, autônomo..." required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo"></div>
+        <div class="campo" data-obrigatorio>
+          <label>Data de início <span class="req">*</span></label>
+          <input type="date" name="exp_inicio_${idx}" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo" data-obrigatorio>
+          <label>Data de saída <span class="req">*</span></label>
+          <input type="date" name="exp_saida_${idx}" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo campo-largo" data-obrigatorio>
+          <label>Razão da saída <span class="req">*</span></label>
+          <input type="text" name="exp_razao_${idx}" required>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+        <div class="campo campo-largo" data-obrigatorio>
+          <label>Principais atividades / responsabilidades <span class="req">*</span></label>
+          <textarea name="exp_atividades_${idx}" required></textarea>
+          <span class="msg-erro">Campo obrigatório.</span>
+        </div>
+      </div>
+    `;
+    listaExp.appendChild(wrap);
+    wrap.querySelector('.remover-exp').addEventListener('click', () => {
+      wrap.remove();
+      atualizarProgresso();
+      renumerarExperiencias();
+    });
+  }
+
+  function renumerarExperiencias(){
+    [...listaExp.querySelectorAll('.experiencia')].forEach((el, i) => {
+      el.querySelector('.experiencia-rotulo').textContent = 'Experiência ' + (i+1);
+    });
+  }
+
+  addExpBtn.addEventListener('click', () => { novaExperiencia(); atualizarProgresso(); });
+  novaExperiencia(); // primeira experiência sempre visível e obrigatória
+
+  // Contador de caracteres
+  const motivacao = document.getElementById('motivacao');
+  const contagem = document.getElementById('contagem-motivacao');
+  motivacao.addEventListener('input', () => {
+    contagem.textContent = motivacao.value.length;
+  });
+
+  // Upload: feedback visual ao escolher arquivo
+  document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const caixa = input.previousElementSibling;
+      const subtitulo = caixa.querySelector('.upload-subtitulo');
+      if (input.files && input.files.length > 0){
+        caixa.classList.add('preenchida');
+        subtitulo.textContent = input.files[0].name;
+        subtitulo.classList.remove('upload-nome-padrao');
+      } else {
+        caixa.classList.remove('preenchida');
+      }
+      atualizarProgresso();
+    });
+  });
+
+  // Barra de progresso
+  const barra = document.getElementById('progresso-barra');
+  const progressoTexto = document.getElementById('progresso-texto');
+  function atualizarProgresso(){
+    const campos = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="file"], select, textarea');
+    let preenchidos = 0, total = 0;
+    campos.forEach(c => {
+      total++;
+      if (c.type === 'file'){ if (c.files && c.files.length > 0) preenchidos++; }
+      else if (c.value.trim() !== '') preenchidos++;
+    });
+    const radiosGrupos = ['sexo','veiculo'];
+    radiosGrupos.forEach(g => {
+      total++;
+      if (form.querySelector(`input[name="${g}"]:checked`)) preenchidos++;
+    });
+    total++; if (document.getElementById('declaracao').checked) preenchidos++;
+    const pct = total ? Math.round((preenchidos/total)*100) : 0;
+    barra.style.width = pct + '%';
+    progressoTexto.textContent = pct + '% preenchido';
+  }
+  form.addEventListener('input', atualizarProgresso);
+  form.addEventListener('change', atualizarProgresso);
+  atualizarProgresso();
+
+  // Validação e envio
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    let valido = true;
+    let primeiroInvalido = null;
+
+    form.querySelectorAll('[data-obrigatorio]').forEach(campo => {
+      campo.classList.remove('invalido');
+      const tipo = campo.dataset.tipo;
+
+      if (tipo === 'radio'){
+        const grupo = campo.dataset.grupo;
+        const marcado = form.querySelector(`input[name="${grupo}"]:checked`);
+        if (!marcado){
+          campo.classList.add('invalido');
+          valido = false;
+          if (!primeiroInvalido) primeiroInvalido = campo.querySelector('input');
+        }
+        return;
+      }
+
+      if (tipo === 'arquivo'){
+        const arquivo = campo.querySelector('input[type="file"]');
+        if (!arquivo.files || arquivo.files.length === 0){
+          campo.classList.add('invalido');
+          valido = false;
+          if (!primeiroInvalido) primeiroInvalido = arquivo;
+        }
+        return;
+      }
+
+      const input = campo.querySelector('input, textarea, select');
+      if (!input) return;
+      if (!input.value || (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value))){
+        campo.classList.add('invalido');
+        valido = false;
+        if (!primeiroInvalido) primeiroInvalido = input;
+      }
+    });
+
+    const decl = document.getElementById('declaracao');
+    if (!decl.checked){
+      valido = false;
+      decl.closest('.declaracao').style.borderColor = 'var(--erro)';
+      if (!primeiroInvalido) primeiroInvalido = decl;
+    }
+
+    if (!valido){
+      primeiroInvalido.focus();
+      primeiroInvalido.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+
+    processarEnvio();
+  });
+
+  function valor(id){
+    const el = document.getElementById(id);
+    return el ? (el.value.trim() || '—') : '—';
+  }
+  function radioValor(nome){
+    const sel = form.querySelector(`input[name="${nome}"]:checked`);
+    return sel ? sel.value : '—';
+  }
+  function arquivoValor(id){
+    const el = document.getElementById(id);
+    return (el && el.files && el.files.length > 0) ? el.files[0].name : '—';
+  }
+  function linha(rotulo, val){
+    return `<div class="resumo-linha"><dt>${rotulo}</dt><dd>${val}</dd></div>`;
+  }
+
+  const NUMERO_HELBOR = '5511973243119';
+
+  function coletarDados(){
+    const blocos = listaExp.querySelectorAll('.experiencia');
+    const experiencias = [...blocos].map((b, i) => {
+      const idx = b.dataset.idx;
+      return {
+        empresa: form.querySelector(`[name="exp_empresa_${idx}"]`).value.trim(),
+        contratacao: form.querySelector(`[name="exp_contratacao_${idx}"]`).value.trim(),
+        inicio: form.querySelector(`[name="exp_inicio_${idx}"]`).value,
+        saida: form.querySelector(`[name="exp_saida_${idx}"]`).value,
+        razao: form.querySelector(`[name="exp_razao_${idx}"]`).value.trim(),
+        atividades: form.querySelector(`[name="exp_atividades_${idx}"]`).value.trim()
+      };
+    });
+
+    return {
+      enviadoEm: new Date().toISOString(),
+      nome: valor('nome'), apelido1: valor('apelido1'), apelido2: valor('apelido2'),
+      equipe: valor('equipe'), apelidoEscolhido: valor('apelidoEscolhido'),
+      nascimento: valor('nascimento'), sexo: radioValor('sexo'), estadoCivil: valor('estadoCivil'),
+      naturalidade: valor('naturalidade'), nacionalidade: valor('nacionalidade'),
+      email: valor('email'), categoria: valor('categoria'),
+      cpf: valor('cpf'), rg: valor('rg'), dataExpedicao: valor('dataExpedicao'), creci: valor('creci'),
+      endereco: valor('endereco'), bairro: valor('bairro'), cep: valor('cep'), cidadeUf: valor('cidadeUf'),
+      telCelular: valor('telCelular'), telResidencial: valor('telResidencial'), telEmergencia: valor('telEmergencia'),
+      nomeMae: valor('nomeMae'), nomePai: valor('nomePai'), nomeConjuge: valor('nomeConjuge'),
+      numFilhos: valor('numFilhos'), idadeFilhos: valor('idadeFilhos'),
+      veiculo: radioValor('veiculo'), indicadoPor: valor('indicadoPor'), tempoArea: valor('tempoArea'),
+      siteCaptacao: valor('siteCaptacao'), meiosCaptacao: valor('meiosCaptacao'),
+      ensinoMedio: valor('ensinoMedio'), instMedio: valor('instMedio'),
+      ensinoSuperior: valor('ensinoSuperior'), instSuperior: valor('instSuperior'),
+      posGraduacao: valor('posGraduacao'), instPos: valor('instPos'), outrosCursos: valor('outrosCursos'),
+      experiencias: experiencias,
+      motivacao: valor('motivacao'), atividadeAutonoma: valor('atividadeAutonoma'),
+      anexos: {
+        rgCnh: arquivoValor('arq_rgCnh'), creci: arquivoValor('arq_creci'),
+        comprovante: arquivoValor('arq_comprovante'), foto: arquivoValor('arq_foto')
+      }
+    };
+  }
+
+  function montarTextoWhatsApp(d){
+    let t = `*FICHA DE CREDENCIAMENTO — HELBOR VENDAS*\n\n`;
+    t += `*Dados pessoais*\n`;
+    t += `Nome: ${d.nome}\nApelido escolhido: ${d.apelidoEscolhido}\nEquipe: ${d.equipe}\n`;
+    t += `Nascimento: ${d.nascimento}\nSexo: ${d.sexo}\nEstado civil: ${d.estadoCivil}\n`;
+    t += `Naturalidade: ${d.naturalidade}\nNacionalidade: ${d.nacionalidade}\n`;
+    t += `E-mail: ${d.email}\nCategoria: ${d.categoria}\n\n`;
+    t += `*Documentos*\nCPF: ${d.cpf}\nRG: ${d.rg} (exp. ${d.dataExpedicao})\nCRECI: ${d.creci}\n\n`;
+    t += `*Residência*\n${d.endereco}, ${d.bairro} — ${d.cidadeUf}, CEP ${d.cep}\n`;
+    t += `Celular: ${d.telCelular} | Residencial: ${d.telResidencial} | Emergência: ${d.telEmergencia}\n`;
+    t += `Mãe: ${d.nomeMae} | Pai: ${d.nomePai} | Cônjuge: ${d.nomeConjuge}\n`;
+    t += `Filhos: ${d.numFilhos} (${d.idadeFilhos})\n\n`;
+    t += `*Pesquisa*\nVeículo próprio: ${d.veiculo}\nIndicado por: ${d.indicadoPor}\n`;
+    t += `Tempo na área: ${d.tempoArea}\nSite de captação: ${d.siteCaptacao}\nMeios de captação: ${d.meiosCaptacao}\n\n`;
+    t += `*Formação*\nEnsino médio: ${d.ensinoMedio} (${d.instMedio})\n`;
+    t += `Ensino superior: ${d.ensinoSuperior} (${d.instSuperior})\n`;
+    t += `Pós-graduação: ${d.posGraduacao} (${d.instPos})\nOutros cursos: ${d.outrosCursos}\n\n`;
+    t += `*Experiências profissionais*\n`;
+    d.experiencias.forEach((e, i) => {
+      t += `${i+1}. ${e.empresa} (${e.contratacao}) — ${e.inicio} a ${e.saida}\n   Razão da saída: ${e.razao}\n   Atividades: ${e.atividades}\n`;
+    });
+    t += `\n*Motivação*\n${d.motivacao}\n\n`;
+    t += `*Sobre a atividade autônoma*\n${d.atividadeAutonoma}\n\n`;
+    t += `*Anexos enviados no formulário*\nRG/CNH: ${d.anexos.rgCnh}\nCRECI: ${d.anexos.creci}\n`;
+    t += `Comprovante de endereço: ${d.anexos.comprovante}\nFoto para crachá: ${d.anexos.foto}\n`;
+    t += `(envie os arquivos de anexo separadamente neste chat)\n\n`;
+    t += `Enviado em: ${new Date(d.enviadoEm).toLocaleString('pt-BR')}`;
+    return t;
+  }
+
+  async function salvarFicha(dados){
+    // Envia os dados preenchidos para o sistema (Cloudflare Worker "desidera"),
+    // que grava no Durable Object dedicado às fichas. Fica salvo mesmo sem
+    // reabrir o WhatsApp, e pode ser consultado depois em /ficha-admin.html.
+    // Obs.: só os campos de texto vão pra cá — os arquivos anexados (RG,
+    // CRECI, comprovante, foto) continuam só dentro do PDF baixado, pois
+    // arquivos binários não cabem no armazenamento de chave/valor usado aqui.
+    try{
+      const resposta = await fetch('/api/fichas', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(dados)
+      });
+      if (!resposta.ok) throw new Error('Resposta HTTP ' + resposta.status);
+      return true;
+    } catch(err){
+      console.error('Não foi possível registrar a ficha no sistema:', err);
+      return false;
+    }
+  }
+
+  function preencherPaginaPdf(dados){
+    document.querySelectorAll('#pdf-render-area [data-campo]').forEach(el => {
+      const campo = el.dataset.campo;
+      if (campo === 'nomeDeclaracao'){ el.textContent = dados.nome; return; }
+      const v = dados[campo];
+      el.textContent = (v === undefined || v === null || v === '') ? '—' : v;
+    });
+
+    const contExp = document.getElementById('pdf-experiencias');
+    contExp.innerHTML = '';
+    dados.experiencias.forEach((e, i) => {
+      const bloco = document.createElement('div');
+      bloco.className = 'pdf-exp-bloco';
+      bloco.innerHTML = `
+        <div class="pdf-exp-rotulo">Experiência ${i+1}</div>
+        <div class="pdf-grade">
+          <div class="pdf-campo largo"><div class="pdf-rotulo">Empresa</div><div class="pdf-valor">${e.empresa || '—'}</div></div>
+          <div class="pdf-campo"><div class="pdf-rotulo">Forma de contratação</div><div class="pdf-valor">${e.contratacao || '—'}</div></div>
+          <div class="pdf-campo"><div class="pdf-rotulo">Período</div><div class="pdf-valor">${e.inicio || '—'} a ${e.saida || '—'}</div></div>
+          <div class="pdf-campo largo"><div class="pdf-rotulo">Razão da saída</div><div class="pdf-valor">${e.razao || '—'}</div></div>
+          <div class="pdf-campo largo"><div class="pdf-rotulo">Principais atividades / responsabilidades</div><div class="pdf-valor">${e.atividades || '—'}</div></div>
+        </div>`;
+      contExp.appendChild(bloco);
+    });
+  }
+
+  function ehArquivoPdf(arquivo){
+    return arquivo.type === 'application/pdf' || /\.pdf$/i.test(arquivo.name);
+  }
+
+  function lerImagemComoDataURL(arquivo){
+    return new Promise((resolve) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(leitor.result);
+      leitor.onerror = () => resolve(null);
+      leitor.readAsDataURL(arquivo);
+    });
+  }
+
+  // Separa os anexos: imagens viram páginas renderizadas dentro do PDF principal;
+  // arquivos PDF são mesclados de verdade (todas as páginas do arquivo original) no final.
+  async function classificarAnexos(){
+    const contAnexos = document.getElementById('pdf-anexos-paginas');
+    contAnexos.innerHTML = '';
+    const definicoes = [
+      { input: document.getElementById('arq_rgCnh'), titulo: 'Anexo — RG ou CNH' },
+      { input: document.getElementById('arq_creci'), titulo: 'Anexo — CRECI' },
+      { input: document.getElementById('arq_comprovante'), titulo: 'Anexo — Comprovante de Endereço' },
+      { input: document.getElementById('arq_foto'), titulo: 'Anexo — Foto para Crachá' }
+    ];
+    const paginasImagem = [];
+    const anexosPdf = [];
+
+    for (const def of definicoes){
+      if (!def.input.files || def.input.files.length === 0) continue;
+      const arquivo = def.input.files[0];
+
+      if (ehArquivoPdf(arquivo)){
+        anexosPdf.push({ titulo: def.titulo, arquivo });
+        continue;
+      }
+
+      const dataUrl = await lerImagemComoDataURL(arquivo);
+      if (!dataUrl) continue;
+      const pagina = document.createElement('div');
+      pagina.className = 'pdf-pagina';
+      pagina.innerHTML = `
+        <div class="pdf-marca">Helbor <span>vendas</span></div>
+        <div class="pdf-anexo-titulo">${def.titulo}</div>
+        <img class="pdf-anexo-imagem" src="${dataUrl}">
+      `;
+      contAnexos.appendChild(pagina);
+      paginasImagem.push(pagina);
+    }
+    return { paginasImagem, anexosPdf };
+  }
+
+  function baixarBytesComoArquivo(bytes, nomeArquivo){
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  async function mesclarAnexosPdf(pdfLibDoc, anexosPdf){
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+    const fonte = await pdfLibDoc.embedFont(StandardFonts.HelveticaBold);
+
+    for (const anexo of anexosPdf){
+      // página de identificação do anexo
+      const paginaTitulo = pdfLibDoc.addPage([595.28, 841.89]);
+      paginaTitulo.drawText('Helbor vendas', { x: 56, y: 780, size: 12, font: fonte, color: rgb(0.043, 0.231, 0.435) });
+      paginaTitulo.drawText(anexo.titulo, { x: 56, y: 400, size: 16, font: fonte, color: rgb(0.03, 0.16, 0.31) });
+      paginaTitulo.drawText('(arquivo PDF original nas próximas páginas)', { x: 56, y: 375, size: 10.5, font: fonte, color: rgb(0.36, 0.4, 0.46) });
+
+      try{
+        const bytesAnexo = await anexo.arquivo.arrayBuffer();
+        const docAnexo = await PDFDocument.load(bytesAnexo, { ignoreEncryption: true });
+        const paginasCopiadas = await pdfLibDoc.copyPages(docAnexo, docAnexo.getPageIndices());
+        paginasCopiadas.forEach(p => pdfLibDoc.addPage(p));
+      } catch(err){
+        console.error('Não foi possível anexar o PDF enviado (' + anexo.titulo + '):', err);
+        paginaTitulo.drawText('Não foi possível ler este arquivo automaticamente — confira o anexo original.', { x: 56, y: 350, size: 10, font: fonte, color: rgb(0.75, 0.18, 0.16) });
+      }
+    }
+  }
+
+  async function gerarEBaixarPdf(dados){
+    preencherPaginaPdf(dados);
+    const { paginasImagem, anexosPdf } = await classificarAnexos();
+    const paginasPrincipais = ['pdf-pagina-1','pdf-pagina-2','pdf-pagina-3','pdf-pagina-4']
+      .map(id => document.getElementById(id));
+    const todasPaginas = [...paginasPrincipais, ...paginasImagem];
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const larguraPdf = pdf.internal.pageSize.getWidth();
+    const alturaPdf = pdf.internal.pageSize.getHeight();
+
+    for (let i = 0; i < todasPaginas.length; i++){
+      const canvas = await html2canvas(todasPaginas[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const alturaImg = (canvas.height * larguraPdf) / canvas.width;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, larguraPdf, Math.min(alturaImg, alturaPdf));
+    }
+
+    const nomeArquivo = 'ficha-credenciamento-' + (dados.nome || 'corretor').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.pdf';
+
+    if (anexosPdf.length === 0){
+      pdf.save(nomeArquivo);
+      return nomeArquivo;
+    }
+
+    // Há PDFs anexados de verdade: mescla como páginas reais usando pdf-lib
+    const bytesBase = pdf.output('arraybuffer');
+    const pdfLibDoc = await PDFLib.PDFDocument.load(bytesBase);
+    await mesclarAnexosPdf(pdfLibDoc, anexosPdf);
+    const bytesFinais = await pdfLibDoc.save();
+    baixarBytesComoArquivo(bytesFinais, nomeArquivo);
+    return nomeArquivo;
+  }
+
+  let ultimosDadosEnviados = null;
+
+  async function processarEnvio(){
+    let html = '';
+
+    html += `<div class="resumo-bloco"><h3>Dados pessoais</h3>`;
+    html += linha('Nome completo', valor('nome'));
+    html += linha('1ª sugestão de apelido', valor('apelido1'));
+    html += linha('2ª sugestão de apelido', valor('apelido2'));
+    html += linha('Equipe', valor('equipe'));
+    html += linha('Apelido escolhido', valor('apelidoEscolhido'));
+    html += linha('Data de nascimento', valor('nascimento'));
+    html += linha('Sexo', radioValor('sexo'));
+    html += linha('Estado civil', valor('estadoCivil'));
+    html += linha('Naturalidade', valor('naturalidade'));
+    html += linha('Nacionalidade', valor('nacionalidade'));
+    html += linha('E-mail', valor('email'));
+    html += linha('Categoria', valor('categoria'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Documentos</h3>`;
+    html += linha('CPF', valor('cpf'));
+    html += linha('RG / órgão expedidor', valor('rg'));
+    html += linha('Data de expedição', valor('dataExpedicao'));
+    html += linha('CRECI', valor('creci'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Residência</h3>`;
+    html += linha('Endereço', valor('endereco'));
+    html += linha('Bairro', valor('bairro'));
+    html += linha('CEP', valor('cep'));
+    html += linha('Cidade - UF', valor('cidadeUf'));
+    html += linha('Telefone celular', valor('telCelular'));
+    html += linha('Telefone residencial', valor('telResidencial'));
+    html += linha('Telefone de emergência', valor('telEmergencia'));
+    html += linha('Nome da mãe', valor('nomeMae'));
+    html += linha('Nome do pai', valor('nomePai'));
+    html += linha('Nome do cônjuge', valor('nomeConjuge'));
+    html += linha('Nº de filhos', valor('numFilhos'));
+    html += linha('Idade dos filhos', valor('idadeFilhos'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Pesquisa</h3>`;
+    html += linha('Possui veículo próprio?', radioValor('veiculo'));
+    html += linha('Indicado por corretor', valor('indicadoPor'));
+    html += linha('Tempo na área', valor('tempoArea'));
+    html += linha('Site de captação', valor('siteCaptacao'));
+    html += linha('Meios de captação', valor('meiosCaptacao'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Formação acadêmica e profissional</h3>`;
+    html += linha('Ensino médio', valor('ensinoMedio') + ' — ' + valor('instMedio'));
+    html += linha('Ensino superior', valor('ensinoSuperior') + ' — ' + valor('instSuperior'));
+    html += linha('Pós-graduação', valor('posGraduacao') + ' — ' + valor('instPos'));
+    html += linha('Outros cursos', valor('outrosCursos'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Experiências profissionais</h3>`;
+    const blocos = listaExp.querySelectorAll('.experiencia');
+    blocos.forEach((b, i) => {
+      const idx = b.dataset.idx;
+      const empresa = form.querySelector(`[name="exp_empresa_${idx}"]`).value.trim() || '—';
+      const contratacao = form.querySelector(`[name="exp_contratacao_${idx}"]`).value.trim() || '—';
+      const inicio = form.querySelector(`[name="exp_inicio_${idx}"]`).value || '—';
+      const saida = form.querySelector(`[name="exp_saida_${idx}"]`).value || '—';
+      const razao = form.querySelector(`[name="exp_razao_${idx}"]`).value.trim() || '—';
+      const atividades = form.querySelector(`[name="exp_atividades_${idx}"]`).value.trim() || '—';
+      html += linha(`Experiência ${i+1} — Empresa`, empresa);
+      html += linha('Forma de contratação', contratacao);
+      html += linha('Período', `${inicio} → ${saida}`);
+      html += linha('Razão da saída', razao);
+      html += linha('Atividades', atividades);
+    });
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Motivação e atividade autônoma</h3>`;
+    html += linha('Por que gostaria de ser credenciado', valor('motivacao'));
+    html += linha('Sobre a atividade autônoma', valor('atividadeAutonoma'));
+    html += `</div>`;
+
+    html += `<div class="resumo-bloco"><h3>Documentos anexados</h3>`;
+    html += linha('RG ou CNH', arquivoValor('arq_rgCnh'));
+    html += linha('CRECI', arquivoValor('arq_creci'));
+    html += linha('Comprovante de endereço', arquivoValor('arq_comprovante'));
+    html += linha('Foto para crachá', arquivoValor('arq_foto'));
+    html += `</div>`;
+
+    document.getElementById('resumo-conteudo').innerHTML = html;
+
+    const dados = coletarDados();
+    ultimosDadosEnviados = dados;
+
+    // Abre o WhatsApp da Helbor imediatamente (precisa ser síncrono com o clique,
+    // senão o navegador bloqueia a janela como pop-up)
+    const textoWpp = montarTextoWhatsApp(dados);
+    const textoCodificado = encodeURIComponent(textoWpp);
+    const linkHelbor = `https://wa.me/${NUMERO_HELBOR}?text=${textoCodificado}`;
+    document.getElementById('wpp-helbor').href = linkHelbor;
+    window.open(linkHelbor, '_blank');
+
+    // Envio automático: registra a ficha no Netlify Forms e já dispara o download do PDF completo
+    const registrado = await salvarFicha(dados);
+    if (!registrado){
+      console.warn('A ficha pode não ter sido registrada no Netlify Forms — o PDF e o WhatsApp seguem normalmente.');
+    }
+    await gerarEBaixarPdf(dados);
+
+    document.getElementById('corpo-form').classList.add('oculto');
+    document.getElementById('progresso-wrap').classList.add('oculto');
+    document.getElementById('tela-resumo').classList.add('ativa');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  document.getElementById('btn-baixar-pdf-novamente').addEventListener('click', async () => {
+    if (ultimosDadosEnviados) await gerarEBaixarPdf(ultimosDadosEnviados);
+  });
+
+  // Atalho oculto (?admin=1): leva direto para a aba "Forms" do site na Netlify,
+  // onde ficam as fichas enviadas de verdade — corretores não veem este link.
+  if (new URLSearchParams(window.location.search).get('admin') === '1'){
+    const cabecalho = document.querySelector('.cabecalho');
+    const linkAdmin = document.createElement('a');
+    linkAdmin.href = '/ficha-admin.html';
+    linkAdmin.target = '_blank';
+    linkAdmin.rel = 'noopener';
+    linkAdmin.className = 'link-admin';
+    linkAdmin.textContent = 'Ver fichas recebidas';
+    cabecalho.appendChild(linkAdmin);
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -63,6 +63,58 @@ export class PainelStorage {
   }
 }
 
+// Durable Object dedicado às Fichas de Credenciamento (Helbor).
+// Cada envio do formulário vira uma chave "ficha:<timestamp>_<random>"
+// guardando o JSON completo dos dados preenchidos. GET lista tudo,
+// POST adiciona uma nova ficha.
+export class FichasStorage {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    if (request.method === "POST") {
+      let dados;
+      try {
+        dados = await request.json();
+      } catch (e) {
+        return new Response(JSON.stringify({ error: "JSON inválido" }), {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const key =
+        "ficha:" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      dados.recebidoEm = new Date().toISOString();
+      await this.ctx.storage.put(key, JSON.stringify(dados));
+      return new Response(JSON.stringify({ ok: true, key }), {
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET") {
+      const map = await this.ctx.storage.list({ prefix: "ficha:" });
+      const fichas = [];
+      for (const [key, value] of map) {
+        try {
+          fichas.push({ key, ...JSON.parse(value) });
+        } catch (e) {
+          // ignora registro corrompido
+        }
+      }
+      fichas.sort(
+        (a, b) => new Date(b.recebidoEm) - new Date(a.recebidoEm)
+      );
+      return new Response(JSON.stringify(fichas), {
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    return new Response("Method not allowed", { status: 405 });
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -72,6 +124,12 @@ export default {
       // lê/escreve na mesma instância, então não há atraso de propagação
       const id = env.PAINEL_STORAGE.idFromName("painel-desidera");
       const stub = env.PAINEL_STORAGE.get(id);
+      return stub.fetch(request);
+    }
+
+    if (url.pathname === "/api/fichas") {
+      const id = env.FICHAS_STORAGE.idFromName("fichas-helbor");
+      const stub = env.FICHAS_STORAGE.get(id);
       return stub.fetch(request);
     }
 

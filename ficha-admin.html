@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fichas recebidas — Helbor Vendas</title>
+<style>
+  :root{
+    --azul-helbor: #0B3B6F;
+    --azul-escuro: #072a52;
+    --ciano-helbor: #00AEEF;
+    --papel: #F7F8FA;
+    --linha: #D9DFE7;
+    --texto: #1C2530;
+    --texto-suave: #5B6675;
+    --branco: #FFFFFF;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --serif: "Source Serif Pro", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--papel); color:var(--texto); font-family:var(--sans);}
+  .cabecalho{
+    background: linear-gradient(135deg, var(--azul-escuro), var(--azul-helbor));
+    color:#fff; padding:28px 32px;
+  }
+  .cabecalho h1{font-family:var(--serif); font-size:24px; margin:0 0 4px;}
+  .cabecalho p{margin:0; font-size:13px; color:#CFE4F5;}
+  .conteudo{max-width:900px; margin:0 auto; padding:24px 20px 60px;}
+  .barra{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;}
+  .contagem{font-size:13px; color:var(--texto-suave);}
+  button{
+    font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;
+    border:1px solid var(--azul-helbor); background:#fff; color:var(--azul-helbor);
+    padding:9px 16px; border-radius:4px;
+  }
+  button:hover{background:#EFF6FB;}
+  .item{
+    border:1px solid var(--linha); border-radius:4px; background:#fff;
+    margin-bottom:10px; padding:14px 16px; cursor:pointer;
+  }
+  .item:hover{border-color:var(--ciano-helbor);}
+  .topo{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .nome{font-weight:700; font-size:15px; color:var(--azul-escuro);}
+  .data{font-size:12px; color:var(--texto-suave);}
+  .sub{font-size:12.5px; color:var(--texto-suave); margin-top:4px;}
+  .detalhe{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--linha);}
+  .item.aberto .detalhe{display:block;}
+  .linha{display:flex; justify-content:space-between; gap:16px; font-size:13px; padding:4px 0; border-bottom:1px dotted #E7EBF0;}
+  .linha dt{color:var(--texto-suave);}
+  .linha dd{margin:0; text-align:right; font-weight:500; max-width:60%;}
+  .vazio, .carregando, .erro{text-align:center; padding:60px 0; color:var(--texto-suave);}
+  .erro{color:#C0392B;}
+</style>
+</head>
+<body>
+
+<div class="cabecalho">
+  <h1>Fichas de Credenciamento recebidas</h1>
+  <p>Studios Casa Piauí — Helbor Vendas</p>
+</div>
+
+<div class="conteudo">
+  <div class="barra">
+    <span class="contagem" id="contagem">Carregando...</span>
+    <button id="atualizar">Atualizar</button>
+  </div>
+  <div id="lista"><div class="carregando">Carregando fichas...</div></div>
+</div>
+
+<script>
+async function carregar(){
+  const lista = document.getElementById('lista');
+  const contagem = document.getElementById('contagem');
+  lista.innerHTML = '<div class="carregando">Carregando fichas...</div>';
+  try{
+    const res = await fetch('/api/fichas');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const fichas = await res.json();
+    contagem.textContent = fichas.length + (fichas.length === 1 ? ' ficha recebida' : ' fichas recebidas');
+    if (fichas.length === 0){
+      lista.innerHTML = '<div class="vazio">Nenhuma ficha recebida ainda.</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    fichas.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      const dataFmt = f.recebidoEm ? new Date(f.recebidoEm).toLocaleString('pt-BR') : '—';
+      el.innerHTML = `
+        <div class="topo">
+          <span class="nome">${f.nome || 'Sem nome'}</span>
+          <span class="data">${dataFmt}</span>
+        </div>
+        <div class="sub">${f.email || '—'} · CRECI ${f.creci || '—'} · ${f.telCelular || '—'}</div>
+        <div class="detalhe"></div>
+      `;
+      el.addEventListener('click', () => {
+        el.classList.toggle('aberto');
+        const det = el.querySelector('.detalhe');
+        if (el.classList.contains('aberto') && !det.dataset.preenchido){
+          det.innerHTML = montarDetalhe(f);
+          det.dataset.preenchido = '1';
+        }
+      });
+      lista.appendChild(el);
+    });
+  } catch(err){
+    contagem.textContent = '';
+    lista.innerHTML = '<div class="erro">Não foi possível carregar as fichas. ' + err.message + '</div>';
+  }
+}
+
+function linha(rotulo, valor){
+  return `<div class="linha"><dt>${rotulo}</dt><dd>${valor ?? '—'}</dd></div>`;
+}
+
+function montarDetalhe(f){
+  let h = '';
+  h += linha('Apelido escolhido', f.apelidoEscolhido);
+  h += linha('Equipe', f.equipe);
+  h += linha('Nascimento', f.nascimento);
+  h += linha('Sexo', f.sexo);
+  h += linha('Estado civil', f.estadoCivil);
+  h += linha('Naturalidade', f.naturalidade);
+  h += linha('Categoria', f.categoria);
+  h += linha('CPF', f.cpf);
+  h += linha('RG', f.rg + ' (exp. ' + f.dataExpedicao + ')');
+  h += linha('Endereço', (f.endereco || '') + ', ' + (f.bairro || '') + ' — ' + (f.cidadeUf || ''));
+  h += linha('CEP', f.cep);
+  h += linha('Telefones', 'Cel: ' + f.telCelular + ' · Res: ' + f.telResidencial + ' · Emerg: ' + f.telEmergencia);
+  h += linha('Veículo próprio', f.veiculo);
+  h += linha('Indicado por', f.indicadoPor);
+  h += linha('Tempo na área', f.tempoArea);
+  h += linha('Meios de captação', f.meiosCaptacao);
+  if (f.experiencias && f.experiencias.length){
+    f.experiencias.forEach((e, i) => {
+      h += linha('Experiência ' + (i+1), (e.empresa||'') + ' — ' + (e.contratacao||'') + ' (' + (e.inicio||'') + ' a ' + (e.saida||'') + ')');
+    });
+  }
+  h += linha('Motivação', f.motivacao);
+  h += linha('Atividade autônoma', f.atividadeAutonoma);
+  if (f.anexos){
+    h += linha('Anexos (nomes dos arquivos)', 'RG/CNH: ' + (f.anexos.rgCnh||'—') + ' · CRECI: ' + (f.anexos.creci||'—') + ' · Comprovante: ' + (f.anexos.comprovante||'—') + ' · Foto: ' + (f.anexos.foto||'—'));
+  }
+  return h;
+}
+
+document.getElementById('atualizar').addEventListener('click', carregar);
+carregar();
+</script>
+
+</body>
+</html>
