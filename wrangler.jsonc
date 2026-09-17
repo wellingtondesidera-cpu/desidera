@@ -7,7 +7,17 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
+  // Mantido só para a migração automática única dos dados que já estavam
+  // salvos aqui antes da troca para Durable Objects (ver worker.js).
   "kv_namespaces": [
     { "binding": "STORAGE", "id": "eb544a07122240fa892fe22a63daa581" }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "PAINEL_STORAGE", "class_name": "PainelStorage" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["PainelStorage"] }
   ]
 }
