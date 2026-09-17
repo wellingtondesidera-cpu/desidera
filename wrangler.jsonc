@@ -12,6 +12,9 @@
   "kv_namespaces": [
     { "binding": "STORAGE", "id": "eb544a07122240fa892fe22a63daa581" }
   ],
+  "r2_buckets": [
+    { "binding": "FICHAS_PDF", "bucket_name": "desidera-fichas-pdf" }
+  ],
   "durable_objects": {
     "bindings": [
       { "name": "PAINEL_STORAGE", "class_name": "PainelStorage" },

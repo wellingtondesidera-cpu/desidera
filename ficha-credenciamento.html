@@ -781,6 +781,8 @@
       <div class="resumo-sub">O PDF foi baixado e o WhatsApp foi aberto com a mensagem pronta.</div>
     </div>
 
+    <div id="erro-pdf" style="display:none; background:#FDF3F2; border:1px solid #E5A6A0; color:#8a2a22; border-radius:4px; padding:14px 16px; font-size:13px; margin-bottom:20px;"></div>
+
     <div class="whatsapp-bloco">
       <div class="whatsapp-titulo">Falta só anexar o PDF baixado na conversa que abriu e apertar enviar</div>
       <div class="whatsapp-aviso" style="margin-top:0;">Por segurança dos navegadores, não é possível anexar o arquivo automaticamente no WhatsApp — esse é o único passo manual. O nome do arquivo baixado começa com "ficha-credenciamento-".</div>
@@ -1292,7 +1294,7 @@
     }
   }
 
-  async function gerarEBaixarPdf(dados){
+  async function gerarBytesPdf(dados){
     preencherPaginaPdf(dados);
     const { paginasImagem, anexosPdf } = await classificarAnexos();
     const paginasPrincipais = ['pdf-pagina-1','pdf-pagina-2','pdf-pagina-3','pdf-pagina-4']
@@ -1312,20 +1314,40 @@
       pdf.addImage(imgData, 'JPEG', 0, 0, larguraPdf, Math.min(alturaImg, alturaPdf));
     }
 
-    const nomeArquivo = 'ficha-credenciamento-' + (dados.nome || 'corretor').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.pdf';
+    const nomeArquivo = 'ficha-credenciamento-' + (dados.nome || 'corretor').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now() + '.pdf';
 
+    let bytesFinais;
     if (anexosPdf.length === 0){
-      pdf.save(nomeArquivo);
-      return nomeArquivo;
+      bytesFinais = pdf.output('arraybuffer');
+    } else {
+      // Há PDFs anexados de verdade: mescla como páginas reais usando pdf-lib
+      const bytesBase = pdf.output('arraybuffer');
+      const pdfLibDoc = await PDFLib.PDFDocument.load(bytesBase);
+      await mesclarAnexosPdf(pdfLibDoc, anexosPdf);
+      bytesFinais = await pdfLibDoc.save();
     }
 
-    // Há PDFs anexados de verdade: mescla como páginas reais usando pdf-lib
-    const bytesBase = pdf.output('arraybuffer');
-    const pdfLibDoc = await PDFLib.PDFDocument.load(bytesBase);
-    await mesclarAnexosPdf(pdfLibDoc, anexosPdf);
-    const bytesFinais = await pdfLibDoc.save();
-    baixarBytesComoArquivo(bytesFinais, nomeArquivo);
+    return { bytes: bytesFinais, nomeArquivo };
+  }
+
+  async function gerarEBaixarPdf(dados){
+    const { bytes, nomeArquivo } = await gerarBytesPdf(dados);
+    baixarBytesComoArquivo(bytes, nomeArquivo);
     return nomeArquivo;
+  }
+
+  async function enviarPdfParaSistema(nomeArquivo, bytes){
+    try{
+      const resposta = await fetch('/api/fichas/pdf/' + encodeURIComponent(nomeArquivo), {
+        method: 'PUT',
+        headers: { 'content-type': 'application/pdf' },
+        body: bytes
+      });
+      return resposta.ok;
+    } catch(err){
+      console.error('Não foi possível enviar o PDF para o sistema:', err);
+      return false;
+    }
   }
 
   let ultimosDadosEnviados = null;
@@ -1428,12 +1450,26 @@
     document.getElementById('wpp-helbor').href = linkHelbor;
     window.open(linkHelbor, '_blank');
 
-    // Envio automático: registra a ficha no Netlify Forms e já dispara o download do PDF completo
+    const avisoErro = document.getElementById('erro-pdf');
+    let pdfChave = null;
+    try{
+      const { bytes, nomeArquivo } = await gerarBytesPdf(dados);
+      baixarBytesComoArquivo(bytes, nomeArquivo);
+      const enviado = await enviarPdfParaSistema(nomeArquivo, bytes);
+      if (enviado) pdfChave = nomeArquivo;
+      avisoErro.style.display = 'none';
+    } catch(err){
+      console.error('Falha ao gerar o PDF:', err);
+      avisoErro.style.display = 'block';
+      avisoErro.textContent = 'Não foi possível gerar o PDF automaticamente (' + (err && err.message ? err.message : err) + '). Use o botão "Baixar o PDF novamente" abaixo para tentar de novo.';
+    }
+    if (pdfChave) dados.pdfChave = pdfChave;
+
+    // Envio automático: registra os dados no sistema (Cloudflare Worker "desidera")
     const registrado = await salvarFicha(dados);
     if (!registrado){
-      console.warn('A ficha pode não ter sido registrada no Netlify Forms — o PDF e o WhatsApp seguem normalmente.');
+      console.warn('A ficha pode não ter sido registrada no sistema — o PDF e o WhatsApp seguem normalmente.');
     }
-    await gerarEBaixarPdf(dados);
 
     document.getElementById('corpo-form').classList.add('oculto');
     document.getElementById('progresso-wrap').classList.add('oculto');
@@ -1442,10 +1478,21 @@
   }
 
   document.getElementById('btn-baixar-pdf-novamente').addEventListener('click', async () => {
-    if (ultimosDadosEnviados) await gerarEBaixarPdf(ultimosDadosEnviados);
+    if (!ultimosDadosEnviados) return;
+    const avisoErro = document.getElementById('erro-pdf');
+    try{
+      const { bytes, nomeArquivo } = await gerarBytesPdf(ultimosDadosEnviados);
+      baixarBytesComoArquivo(bytes, nomeArquivo);
+      await enviarPdfParaSistema(nomeArquivo, bytes);
+      avisoErro.style.display = 'none';
+    } catch(err){
+      console.error('Falha ao gerar o PDF:', err);
+      avisoErro.style.display = 'block';
+      avisoErro.textContent = 'Não foi possível gerar o PDF (' + (err && err.message ? err.message : err) + ').';
+    }
   });
 
-  // Atalho oculto (?admin=1): leva direto para a aba "Forms" do site na Netlify,
+  // Atalho oculto (?admin=1): leva direto para a página de fichas recebidas,
   // onde ficam as fichas enviadas de verdade — corretores não veem este link.
   if (new URLSearchParams(window.location.search).get('admin') === '1'){
     const cabecalho = document.querySelector('.cabecalho');

@@ -133,6 +133,41 @@ export default {
       return stub.fetch(request);
     }
 
+    if (url.pathname.startsWith("/api/fichas/pdf/")) {
+      const chave = decodeURIComponent(url.pathname.slice("/api/fichas/pdf/".length));
+      if (!chave) {
+        return new Response(JSON.stringify({ error: "chave ausente" }), {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      if (request.method === "PUT") {
+        await env.FICHAS_PDF.put(chave, request.body, {
+          httpMetadata: { contentType: "application/pdf" },
+        });
+        return new Response(JSON.stringify({ ok: true, chave }), {
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      if (request.method === "GET") {
+        const objeto = await env.FICHAS_PDF.get(chave);
+        if (!objeto) {
+          return new Response("PDF não encontrado", { status: 404 });
+        }
+        return new Response(objeto.body, {
+          headers: {
+            "content-type": "application/pdf",
+            "content-disposition": `inline; filename="${chave}"`,
+            "cache-control": "public, max-age=31536000, immutable",
+          },
+        });
+      }
+
+      return new Response("Method not allowed", { status: 405 });
+    }
+
     return env.ASSETS.fetch(request);
   },
 };

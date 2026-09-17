@@ -43,6 +43,12 @@
   .nome{font-weight:700; font-size:15px; color:var(--azul-escuro);}
   .data{font-size:12px; color:var(--texto-suave);}
   .sub{font-size:12.5px; color:var(--texto-suave); margin-top:4px;}
+  .link-pdf{
+    display:inline-flex; align-items:center; gap:5px; font-weight:600;
+    color:var(--azul-helbor); text-decoration:none; font-size:12.5px;
+  }
+  .link-pdf:hover{text-decoration:underline;}
+  .sem-pdf{font-size:12px; color:#B0B8C1; font-style:italic;}
   .detalhe{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--linha);}
   .item.aberto .detalhe{display:block;}
   .linha{display:flex; justify-content:space-between; gap:16px; font-size:13px; padding:4px 0; border-bottom:1px dotted #E7EBF0;}
@@ -86,12 +92,16 @@ async function carregar(){
       const el = document.createElement('div');
       el.className = 'item';
       const dataFmt = f.recebidoEm ? new Date(f.recebidoEm).toLocaleString('pt-BR') : '—';
+      const linkPdf = f.pdfChave
+        ? `<a href="/api/fichas/pdf/${encodeURIComponent(f.pdfChave)}" target="_blank" rel="noopener" class="link-pdf" onclick="event.stopPropagation()">📄 Baixar PDF</a>`
+        : `<span class="sem-pdf">PDF não disponível</span>`;
       el.innerHTML = `
         <div class="topo">
           <span class="nome">${f.nome || 'Sem nome'}</span>
           <span class="data">${dataFmt}</span>
         </div>
         <div class="sub">${f.email || '—'} · CRECI ${f.creci || '—'} · ${f.telCelular || '—'}</div>
+        <div class="sub" style="margin-top:6px;">${linkPdf}</div>
         <div class="detalhe"></div>
       `;
       el.addEventListener('click', () => {
