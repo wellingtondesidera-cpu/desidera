@@ -142,27 +142,45 @@ export default {
         });
       }
 
-      if (request.method === "PUT") {
-        await env.FICHAS_PDF.put(chave, request.body, {
-          httpMetadata: { contentType: "application/pdf" },
-        });
-        return new Response(JSON.stringify({ ok: true, chave }), {
+      if (!env.FICHAS_PDF) {
+        return new Response(JSON.stringify({ error: "bucket FICHAS_PDF não está vinculado ao worker" }), {
+          status: 500,
           headers: { "content-type": "application/json" },
         });
       }
 
-      if (request.method === "GET") {
-        const objeto = await env.FICHAS_PDF.get(chave);
-        if (!objeto) {
-          return new Response("PDF não encontrado", { status: 404 });
+      if (request.method === "PUT") {
+        try{
+          await env.FICHAS_PDF.put(chave, request.body, {
+            httpMetadata: { contentType: "application/pdf" },
+          });
+          return new Response(JSON.stringify({ ok: true, chave }), {
+            headers: { "content-type": "application/json" },
+          });
+        } catch(err){
+          return new Response(JSON.stringify({ error: "falha ao salvar no R2: " + err.message }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
         }
-        return new Response(objeto.body, {
-          headers: {
-            "content-type": "application/pdf",
-            "content-disposition": `inline; filename="${chave}"`,
-            "cache-control": "public, max-age=31536000, immutable",
-          },
-        });
+      }
+
+      if (request.method === "GET") {
+        try{
+          const objeto = await env.FICHAS_PDF.get(chave);
+          if (!objeto) {
+            return new Response("PDF não encontrado (chave: " + chave + ")", { status: 404 });
+          }
+          return new Response(objeto.body, {
+            headers: {
+              "content-type": "application/pdf",
+              "content-disposition": `inline; filename="${chave}"`,
+              "cache-control": "public, max-age=31536000, immutable",
+            },
+          });
+        } catch(err){
+          return new Response("Erro ao ler do R2: " + err.message, { status: 500 });
+        }
       }
 
       return new Response("Method not allowed", { status: 405 });
