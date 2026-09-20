@@ -97,7 +97,7 @@ const HELBOR_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlsAAADwCAYAA
 
 const PLANTAO_OPTIONS = ["Havva", "Piauí", "Madalena", "Caminhos Lapa", "Vila Clementino", "Lenns Moema"];
 
-const STATUS_OPTIONS = ["Ativo", "Aguardando Contrato", "Aguardando Cadastro", "Aguardando Interação"];
+const STATUS_OPTIONS = ["Ativo", "Aguardando Contrato", "Aguardando Cadastro"];
 
 const INITIAL_CORRETORES = [
   { id: 1, apelido: "Naira", tel: "11 91627-2303", creci: "287818", funcao: "Corretora", tipo: "Híbrido", plantao: "Havva", status: "Ativo" },
@@ -113,10 +113,12 @@ const INITIAL_CORRETORES = [
 ];
 
 const TURNOS = [
-  { id: "manha", label: "Manhã", horario: "08h45 às 14h00", slots: 4 },
-  { id: "tarde", label: "Tarde", horario: "14h00 às 19h00", slots: 4 },
-  { id: "noite", label: "Noite", horario: "19h00 às 23h00", slots: 2 },
+  { id: "manha", label: "Manhã", horario: "08h45 às 14h00" },
+  { id: "tarde", label: "Tarde", horario: "14h00 às 19h00" },
+  { id: "noite", label: "Noite", horario: "19h00 às 23h00" },
 ];
+
+const DEFAULT_SLOT_COUNTS = { manha: 1, tarde: 1, noite: 1 };
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
@@ -144,11 +146,10 @@ function toISODate(d) {
 
 function Painel() {
   const [tab, setTab] = useState("cadastro");
-  const [debugLog, setDebugLog] = useState([]);
-  const [showDebug, setShowDebug] = useState(false);
   const [corretores, setCorretores] = useState(INITIAL_CORRETORES);
   const [escala, setEscala] = useState({});
   const [weekStart, setWeekStart] = useState(toISODate(mondayOf(new Date())));
+  const [slotCounts, setSlotCounts] = useState(DEFAULT_SLOT_COUNTS);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [printBlocked, setPrintBlocked] = useState(false);
@@ -158,13 +159,6 @@ function Painel() {
   const [addingPlantao, setAddingPlantao] = useState(false);
   const [novoPlantao, setNovoPlantao] = useState("");
   const [plantaoOptions, setPlantaoOptions] = useState(PLANTAO_OPTIONS);
-
-  // ---- diagnóstico de sincronização ----
-  useEffect(() => {
-    const handler = (ev) => setDebugLog((prev) => [ev.detail, ...prev].slice(0, 20));
-    window.addEventListener("storage-debug", handler);
-    return () => window.removeEventListener("storage-debug", handler);
-  }, []);
 
   // ---- load persisted state ----
   useEffect(() => {
@@ -201,6 +195,12 @@ function Painel() {
       } catch (e) {
         /* no saved data yet */
       }
+      try {
+        const s = await window.storage.get("desidera-slotcounts");
+        if (s && s.value) setSlotCounts({ ...DEFAULT_SLOT_COUNTS, ...JSON.parse(s.value) });
+      } catch (e) {
+        /* no saved data yet */
+      }
       setLoaded(true);
     })();
   }, []);
@@ -226,6 +226,10 @@ function Painel() {
   useEffect(() => {
     if (loaded) persist("desidera-plantoes", plantaoOptions);
   }, [plantaoOptions, loaded]);
+
+  useEffect(() => {
+    if (loaded) persist("desidera-slotcounts", slotCounts);
+  }, [slotCounts, loaded]);
 
   const weekDates = useMemo(() => {
     const start = mondayOf(new Date(weekStart + "T00:00:00"));
@@ -321,9 +325,6 @@ function Painel() {
   th { text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.03em; color: #5B6675; padding: 6px 8px; border-bottom: 2px solid #101E33; }
   td { padding: 7px 8px; border-bottom: 1px solid #DDE2E8; font-size: 12.5px; }
   .badge { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid; }
-  .legend-print { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #DDE2E8; }
-  .legend-print span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #5B6675; }
-  .legend-print .dot { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
   @media print { body { margin: 10mm; } }
 </style></head>
 <body>
@@ -338,14 +339,6 @@ function Painel() {
     <thead><tr><th>Nº</th><th>Apelido</th><th>Creci</th><th>Função</th><th>Tipo</th><th>Plantão</th><th>Status</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-  <div class="legend-print">
-    <span><span class="dot" style="background:${tipoColor("Híbrido")}"></span>Híbrido (${counts.tipo["Híbrido"]})</span>
-    <span><span class="dot" style="background:${tipoColor("Salão")}"></span>Salão (${counts.tipo["Salão"]})</span>
-    <span><span class="dot" style="background:${statusColor("Ativo")}"></span>Ativo (${counts.status["Ativo"]})</span>
-    <span><span class="dot" style="background:${statusColor("Aguardando Contrato")}"></span>Aguardando contrato (${counts.status["Aguardando Contrato"]})</span>
-    <span><span class="dot" style="background:${statusColor("Aguardando Cadastro")}"></span>Aguardando cadastro (${counts.status["Aguardando Cadastro"]})</span>
-    <span><span class="dot" style="background:${statusColor("Aguardando Interação")}"></span>Aguardando interação (${counts.status["Aguardando Interação"]})</span>
-  </div>
   <script>window.onload = function () { window.print(); };<\/script>
 </body></html>`;
 
@@ -371,6 +364,10 @@ function Painel() {
     setPrintBlocked(true);
   }
 
+  function addSlot(turnoId) {
+    setSlotCounts((prev) => ({ ...prev, [turnoId]: (prev[turnoId] || 1) + 1 }));
+  }
+
   function clearWeek() {
     const prefix = weekStart + "|";
     setEscala((prev) => {
@@ -393,23 +390,10 @@ function Painel() {
     [corretores]
   );
 
-  const counts = useMemo(() => {
-    const c = {
-      tipo: { "Híbrido": 0, "Salão": 0 },
-      status: { "Ativo": 0, "Aguardando Contrato": 0, "Aguardando Cadastro": 0, "Aguardando Interação": 0 },
-    };
-    corretores.forEach((cor) => {
-      if (c.tipo[cor.tipo] !== undefined) c.tipo[cor.tipo] += 1;
-      if (c.status[cor.status] !== undefined) c.status[cor.status] += 1;
-    });
-    return c;
-  }, [corretores]);
-
   const tipoColor = (tipo) => (tipo === "Híbrido" ? "#101E33" : "#E8792C");
   const statusColor = (status) => {
     if (status === "Ativo") return "#2F9E63";
     if (status === "Aguardando Contrato") return "#E0A526";
-    if (status === "Aguardando Interação") return "#7C5CBF";
     return "#8A94A3"; // Aguardando Cadastro
   };
 
@@ -622,6 +606,8 @@ function Painel() {
           white-space: nowrap;
           background: #FAFBFC;
         }
+        .add-slot-row td { background: #fff; padding: 4px 10px; border-top: none; }
+        .add-slot-btn { font-size: 11.5px; padding: 4px 10px; border-style: dashed; }
         .escala-table td.cell { padding: 3px; min-width: 118px; }
         .escala-table select {
           width: 100%;
@@ -654,7 +640,7 @@ function Painel() {
         }
 
         @media print {
-          .btn, .tabs, .row-actions, .save-flag, .col-tel, .week-bar input[type="date"] { display: none !important; }
+          .btn, .tabs, .row-actions, .save-flag, .col-tel, .week-bar input[type="date"], .add-slot-row { display: none !important; }
           .painel-root { background: #fff; }
           .hdr { background: #fff; border-bottom: 2px solid var(--navy); }
           .hdr-title, .hdr-sub { color: var(--navy) !important; }
@@ -749,20 +735,9 @@ function Painel() {
                         </select>
                       </td>
                       <td>
-                        {!addingPlantao ? (
-                          <select className="cad-select" value={form.plantao} onChange={(e) => {
-                            if (e.target.value === "__new__") { setAddingPlantao(true); }
-                            else setForm({ ...form, plantao: e.target.value });
-                          }}>
-                            {plantaoOptions.map((p) => <option key={p}>{p}</option>)}
-                            <option value="__new__">+ novo plantão…</option>
-                          </select>
-                        ) : (
-                          <div style={{ display: "flex", gap: 4 }}>
-                            <input className="cad-input" autoFocus placeholder="Nome do plantão" value={novoPlantao} onChange={(e) => setNovoPlantao(e.target.value)} onKeyDown={(e) => e.key === "Enter" && confirmAddPlantao()} />
-                            <button className="btn sm" onClick={confirmAddPlantao}>OK</button>
-                          </div>
-                        )}
+                        <select className="cad-select" value={form.plantao} onChange={(e) => setForm({ ...form, plantao: e.target.value })}>
+                          {plantaoOptions.map((p) => <option key={p}>{p}</option>)}
+                        </select>
                       </td>
                       <td>
                         <select className="cad-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
@@ -847,13 +822,12 @@ function Painel() {
             </table>
 
             <div className="legend">
-              <span><span className="tipo-dot" style={{ background: tipoColor("Híbrido") }} /> Híbrido ({counts.tipo["Híbrido"]})</span>
-              <span><span className="tipo-dot" style={{ background: tipoColor("Salão") }} /> Salão ({counts.tipo["Salão"]})</span>
+              <span><span className="tipo-dot" style={{ background: tipoColor("Híbrido") }} /> Híbrido</span>
+              <span><span className="tipo-dot" style={{ background: tipoColor("Salão") }} /> Salão</span>
               <span style={{ width: 1, height: 14, background: "var(--line)" }} />
-              <span><span className="tipo-dot" style={{ background: statusColor("Ativo") }} /> Ativo ({counts.status["Ativo"]})</span>
-              <span><span className="tipo-dot" style={{ background: statusColor("Aguardando Contrato") }} /> Aguardando contrato ({counts.status["Aguardando Contrato"]})</span>
-              <span><span className="tipo-dot" style={{ background: statusColor("Aguardando Cadastro") }} /> Aguardando cadastro ({counts.status["Aguardando Cadastro"]})</span>
-              <span><span className="tipo-dot" style={{ background: statusColor("Aguardando Interação") }} /> Aguardando interação ({counts.status["Aguardando Interação"]})</span>
+              <span><span className="tipo-dot" style={{ background: statusColor("Ativo") }} /> Ativo</span>
+              <span><span className="tipo-dot" style={{ background: statusColor("Aguardando Contrato") }} /> Aguardando contrato</span>
+              <span><span className="tipo-dot" style={{ background: statusColor("Aguardando Cadastro") }} /> Aguardando cadastro</span>
               {saving && <span className="save-flag">Salvando…</span>}
             </div>
           </div>
@@ -892,7 +866,7 @@ function Painel() {
                       <tr className="turno-head">
                         <td colSpan={DIAS.length + 1}>{turno.label} · {turno.horario}</td>
                       </tr>
-                      {Array.from({ length: turno.slots }).map((_, slotIdx) => (
+                      {Array.from({ length: slotCounts[turno.id] || 1 }).map((_, slotIdx) => (
                         <tr key={`${turno.id}-${slotIdx}`}>
                           <td className="slot-label">{turno.horario}</td>
                           {DIAS.map((_, dayIdx) => {
@@ -913,6 +887,11 @@ function Painel() {
                           })}
                         </tr>
                       ))}
+                      <tr className="add-slot-row">
+                        <td colSpan={DIAS.length + 1}>
+                          <button className="btn ghost sm add-slot-btn no-print" onClick={() => addSlot(turno.id)}>+ Adicionar horário</button>
+                        </td>
+                      </tr>
                     </Fragment>
                   ))}
                 </tbody>
@@ -927,33 +906,13 @@ function Painel() {
           </div>
         )}
       </div>
-
-      <button
-        onClick={() => setShowDebug((v) => !v)}
-        style={{ position: "fixed", bottom: 10, right: 10, zIndex: 9999, fontSize: 10, padding: "4px 8px", borderRadius: 6, border: "1px solid #DDE2E8", background: "#fff", color: "#5B6675", cursor: "pointer", opacity: 0.7 }}
-      >
-        sync {debugLog[0] ? (debugLog[0].error ? "⚠️" : debugLog[0].ok ? "✅" : "•") : "…"}
-      </button>
-      {showDebug && (
-        <div style={{ position: "fixed", bottom: 40, right: 10, zIndex: 9999, width: 360, maxHeight: 300, overflow: "auto", background: "#101E33", color: "#DDE2E8", fontSize: 10.5, fontFamily: "monospace", padding: 10, borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,.3)" }}>
-          <div style={{ marginBottom: 6, fontWeight: 700 }}>Diagnóstico de sincronização</div>
-          {debugLog.length === 0 && <div>sem eventos ainda…</div>}
-          {debugLog.map((e, i) => (
-            <div key={i} style={{ marginBottom: 4, paddingBottom: 4, borderBottom: "1px solid #1B2E4A" }}>
-              <div>{e.ts} · {e.op} · {e.key ? e.key.replace("desidera-", "") : ""}</div>
-              {e.status !== undefined && <div>status: {e.status}</div>}
-              {e.note && <div style={{ color: "#E8792C" }}>{e.note}</div>}
-              {e.error && <div style={{ color: "#ff8080" }}>erro: {e.error}</div>}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(<Painel />);
+
 </script>
 <script>
 (function () {
