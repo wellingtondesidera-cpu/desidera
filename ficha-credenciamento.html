@@ -373,6 +373,16 @@
   .pdf-assinatura-legenda{ text-align:center; font-size:11px; color:#5B6675; }
   .pdf-anexo-titulo{ font-family: var(--serif); font-size:18px; color: var(--azul-escuro); margin-bottom:20px; text-align:center; }
   .pdf-anexo-imagem{ display:block; max-width:100%; max-height:920px; margin:0 auto; border:1px solid #D9DFE7; }
+  /* ---------- Overlay de envio ---------- */
+  .overlay-envio{ position:fixed; inset:0; background:rgba(8,28,51,0.82); display:none; align-items:center; justify-content:center; z-index:9999; padding:24px; }
+  .overlay-envio.ativo{ display:flex; }
+  .overlay-caixa{ background:#fff; border-radius:8px; padding:28px 26px; max-width:360px; width:100%; text-align:center; }
+  .overlay-spinner{ width:42px; height:42px; border:4px solid #D9DFE7; border-top-color: var(--ciano-helbor); border-radius:50%; margin:0 auto 16px; animation: girar 0.9s linear infinite; }
+  @keyframes girar{ to{ transform:rotate(360deg); } }
+  .overlay-titulo{ font-weight:700; font-size:16px; color: var(--azul-escuro); margin-bottom:6px; }
+  .overlay-etapa{ font-size:13px; color: var(--texto-suave); }
+  .overlay-alerta{ font-size:12px; color:#8a2a22; margin-top:14px; }
+  .erro-envio{ display:none; background:#FDF3F2; border:1px solid #E5A6A0; color:#8a2a22; border-radius:4px; padding:12px 14px; font-size:13px; max-width:420px; text-align:center; }
 </style>
 </head>
 <body>
@@ -767,7 +777,8 @@
 
     <div class="rodape-acoes">
       <button type="submit" class="btn-enviar">Enviar ficha de credenciamento</button>
-      <div class="aviso-envio">Ao clicar, a ficha é enviada automaticamente: o PDF completo (com os documentos anexados) é baixado no seu aparelho e o WhatsApp já abre com a mensagem pronta — só falta anexar o PDF baixado e apertar enviar.</div>
+      <div class="erro-envio" id="erro-envio"></div>
+      <div class="aviso-envio">Ao clicar, sua ficha e os documentos anexados são enviados direto para a Helbor. Aguarde a confirmação na tela antes de sair da página.</div>
     </div>
 
   </form>
@@ -777,18 +788,17 @@
   <div class="tela-resumo" id="tela-resumo">
     <div class="resumo-cabeca">
       <div class="resumo-marca-ok">✓</div>
-      <div class="resumo-titulo">Ficha enviada</div>
-      <div class="resumo-sub">O PDF foi baixado e o WhatsApp foi aberto com a mensagem pronta.</div>
+      <div class="resumo-titulo">Ficha recebida</div>
+      <div class="resumo-sub">Sua ficha e os documentos foram enviados com sucesso. Não é preciso fazer mais nada.</div>
     </div>
 
     <div id="erro-pdf" style="display:none; background:#FDF3F2; border:1px solid #E5A6A0; color:#8a2a22; border-radius:4px; padding:14px 16px; font-size:13px; margin-bottom:20px;"></div>
 
     <div class="whatsapp-bloco">
-      <div class="whatsapp-titulo">Falta só anexar o PDF baixado na conversa que abriu e apertar enviar</div>
-      <div class="whatsapp-aviso" style="margin-top:0;">Por segurança dos navegadores, não é possível anexar o arquivo automaticamente no WhatsApp — esse é o único passo manual. O nome do arquivo baixado começa com "ficha-credenciamento-".</div>
+      <div class="whatsapp-titulo">Opcional: avise a Helbor pelo WhatsApp que sua ficha foi enviada</div>
       <div class="whatsapp-botoes" style="margin-top:16px;">
-        <a href="#" id="wpp-helbor" class="btn-whatsapp" target="_blank" rel="noopener">📤 Abrir WhatsApp da Helbor novamente</a>
-        <button type="button" class="btn-outline" id="btn-baixar-pdf-novamente">Baixar o PDF novamente</button>
+        <a href="#" id="wpp-helbor" class="btn-whatsapp" target="_blank" rel="noopener">📤 Avisar no WhatsApp</a>
+        <button type="button" class="btn-outline" id="btn-baixar-pdf-novamente">Baixar uma cópia do PDF</button>
       </div>
     </div>
 
@@ -796,6 +806,15 @@
   </div>
 
 </div>
+
+  <div class="overlay-envio" id="overlay-envio">
+    <div class="overlay-caixa">
+      <div class="overlay-spinner"></div>
+      <div class="overlay-titulo">Enviando sua ficha…</div>
+      <div class="overlay-etapa" id="overlay-etapa">Preparando</div>
+      <div class="overlay-alerta">Não feche nem saia desta página até aparecer a confirmação.</div>
+    </div>
+  </div>
 
   <!-- Modelo oculto usado para gerar o PDF final (mesmo layout da ficha original) -->
   <div id="pdf-render-area">
@@ -1020,6 +1039,7 @@
   // Validação e envio
   form.addEventListener('submit', function(e){
     e.preventDefault();
+    if (enviando) return;
     let valido = true;
     let primeiroInvalido = null;
 
@@ -1133,32 +1153,17 @@
 
   function montarTextoWhatsApp(d){
     let t = `*FICHA DE CREDENCIAMENTO — HELBOR VENDAS*\n\n`;
-    t += `*Dados pessoais*\n`;
-    t += `Nome: ${d.nome}\nApelido escolhido: ${d.apelidoEscolhido}\nEquipe: ${d.equipe}\n`;
-    t += `Nascimento: ${d.nascimento}\nSexo: ${d.sexo}\nEstado civil: ${d.estadoCivil}\n`;
-    t += `Naturalidade: ${d.naturalidade}\nNacionalidade: ${d.nacionalidade}\n`;
-    t += `E-mail: ${d.email}\nCategoria: ${d.categoria}\n\n`;
-    t += `*Documentos*\nCPF: ${d.cpf}\nRG: ${d.rg} (exp. ${d.dataExpedicao})\nCRECI: ${d.creci}\n\n`;
-    t += `*Residência*\n${d.endereco}, ${d.bairro} — ${d.cidadeUf}, CEP ${d.cep}\n`;
-    t += `Celular: ${d.telCelular} | Residencial: ${d.telResidencial} | Emergência: ${d.telEmergencia}\n`;
-    t += `Mãe: ${d.nomeMae} | Pai: ${d.nomePai} | Cônjuge: ${d.nomeConjuge}\n`;
-    t += `Filhos: ${d.numFilhos} (${d.idadeFilhos})\n\n`;
-    t += `*Pesquisa*\nVeículo próprio: ${d.veiculo}\nIndicado por: ${d.indicadoPor}\n`;
-    t += `Tempo na área: ${d.tempoArea}\nSite de captação: ${d.siteCaptacao}\nMeios de captação: ${d.meiosCaptacao}\n\n`;
-    t += `*Formação*\nEnsino médio: ${d.ensinoMedio} (${d.instMedio})\n`;
-    t += `Ensino superior: ${d.ensinoSuperior} (${d.instSuperior})\n`;
-    t += `Pós-graduação: ${d.posGraduacao} (${d.instPos})\nOutros cursos: ${d.outrosCursos}\n\n`;
-    t += `*Experiências profissionais*\n`;
-    d.experiencias.forEach((e, i) => {
-      t += `${i+1}. ${e.empresa} (${e.contratacao}) — ${e.inicio} a ${e.saida}\n   Razão da saída: ${e.razao}\n   Atividades: ${e.atividades}\n`;
-    });
-    t += `\n*Motivação*\n${d.motivacao}\n\n`;
-    t += `*Sobre a atividade autônoma*\n${d.atividadeAutonoma}\n\n`;
-    t += `*Anexos enviados no formulário*\nRG/CNH: ${d.anexos.rgCnh}\nCRECI: ${d.anexos.creci}\n`;
-    t += `Comprovante de endereço: ${d.anexos.comprovante}\nFoto para crachá: ${d.anexos.foto}\n`;
-    t += `(envie os arquivos de anexo separadamente neste chat)\n\n`;
-    t += `Enviado em: ${new Date(d.enviadoEm).toLocaleString('pt-BR')}`;
+    t += `Olá! Ficha enviada ✅\n\n`;
+    t += `Nome: ${d.nome}\nCRECI: ${d.creci}`;
     return t;
+  }
+
+  async function comTentativas(fn, tentativas = 3){
+    for (let i = 0; i < tentativas; i++){
+      if (await fn()) return true;
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+    }
+    return false;
   }
 
   async function salvarFicha(dados){
@@ -1213,10 +1218,29 @@
   }
 
   function lerImagemComoDataURL(arquivo){
+    // Lê a imagem e reduz para no máx. 1600px no maior lado (fotos de celular
+    // têm 12MP+ e podem travar a geração do PDF em aparelhos mais simples).
     return new Promise((resolve) => {
       const leitor = new FileReader();
-      leitor.onload = () => resolve(leitor.result);
       leitor.onerror = () => resolve(null);
+      leitor.onload = () => {
+        const original = leitor.result;
+        const img = new Image();
+        img.onerror = () => resolve(original);
+        img.onload = () => {
+          try{
+            const MAX = 1600;
+            const escala = Math.min(1, MAX / Math.max(img.width, img.height));
+            if (escala >= 1){ resolve(original); return; }
+            const c = document.createElement('canvas');
+            c.width = Math.round(img.width * escala);
+            c.height = Math.round(img.height * escala);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            resolve(c.toDataURL('image/jpeg', 0.85));
+          } catch(e){ resolve(original); }
+        };
+        img.src = original;
+      };
       leitor.readAsDataURL(arquivo);
     });
   }
@@ -1351,6 +1375,8 @@
   }
 
   let ultimosDadosEnviados = null;
+  let ultimoPdf = null;
+  let enviando = false;
 
   async function processarEnvio(){
     let html = '';
@@ -1442,34 +1468,49 @@
     const dados = coletarDados();
     ultimosDadosEnviados = dados;
 
-    // Abre o WhatsApp da Helbor imediatamente (precisa ser síncrono com o clique,
-    // senão o navegador bloqueia a janela como pop-up)
-    const textoWpp = montarTextoWhatsApp(dados);
-    const textoCodificado = encodeURIComponent(textoWpp);
-    const linkHelbor = `https://wa.me/${NUMERO_HELBOR}?text=${textoCodificado}`;
-    document.getElementById('wpp-helbor').href = linkHelbor;
-    window.open(linkHelbor, '_blank');
+    const btnEnviar = form.querySelector('.btn-enviar');
+    const erroEnvio = document.getElementById('erro-envio');
+    const overlay = document.getElementById('overlay-envio');
+    const etapa = document.getElementById('overlay-etapa');
+    erroEnvio.style.display = 'none';
+    btnEnviar.disabled = true;
+    overlay.classList.add('ativo');
+    enviando = true;
 
-    const avisoErro = document.getElementById('erro-pdf');
+    // 1) Gera o PDF completo e envia para o sistema (R2) — tudo antes de sair da página
     let pdfChave = null;
     try{
+      etapa.textContent = 'Gerando o PDF com seus documentos…';
       const { bytes, nomeArquivo } = await gerarBytesPdf(dados);
-      baixarBytesComoArquivo(bytes, nomeArquivo);
-      const enviado = await enviarPdfParaSistema(nomeArquivo, bytes);
+      ultimoPdf = { bytes, nomeArquivo };
+      etapa.textContent = 'Enviando o PDF…';
+      const enviado = await comTentativas(() => enviarPdfParaSistema(nomeArquivo, bytes));
       if (enviado) pdfChave = nomeArquivo;
-      avisoErro.style.display = 'none';
     } catch(err){
       console.error('Falha ao gerar o PDF:', err);
-      avisoErro.style.display = 'block';
-      avisoErro.textContent = 'Não foi possível gerar o PDF automaticamente (' + (err && err.message ? err.message : err) + '). Use o botão "Baixar o PDF novamente" abaixo para tentar de novo.';
     }
     if (pdfChave) dados.pdfChave = pdfChave;
 
-    // Envio automático: registra os dados no sistema (Cloudflare Worker "desidera")
-    const registrado = await salvarFicha(dados);
-    if (!registrado){
-      console.warn('A ficha pode não ter sido registrada no sistema — o PDF e o WhatsApp seguem normalmente.');
+    // 2) Registra a ficha no painel (com o link do PDF, quando houver)
+    etapa.textContent = 'Registrando a ficha…';
+    const registrado = await comTentativas(() => salvarFicha(dados));
+
+    overlay.classList.remove('ativo');
+    enviando = false;
+
+    if (!registrado || !pdfChave){
+      btnEnviar.disabled = false;
+      erroEnvio.style.display = 'block';
+      erroEnvio.textContent = registrado
+        ? 'Seus dados foram recebidos, mas o PDF com os documentos não foi enviado. Verifique sua internet e clique em "Enviar" novamente.'
+        : 'Não foi possível enviar sua ficha. Verifique sua internet e clique em "Enviar" novamente.';
+      erroEnvio.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
     }
+
+    // 3) Sucesso: WhatsApp vira só um aviso opcional de "ficha enviada"
+    const textoWpp = montarTextoWhatsApp(dados);
+    document.getElementById('wpp-helbor').href = `https://wa.me/${NUMERO_HELBOR}?text=${encodeURIComponent(textoWpp)}`;
 
     document.getElementById('corpo-form').classList.add('oculto');
     document.getElementById('progresso-wrap').classList.add('oculto');
@@ -1477,13 +1518,15 @@
     window.scrollTo({top:0, behavior:'smooth'});
   }
 
+  window.addEventListener('beforeunload', (e) => {
+    if (enviando){ e.preventDefault(); e.returnValue = ''; }
+  });
+
   document.getElementById('btn-baixar-pdf-novamente').addEventListener('click', async () => {
-    if (!ultimosDadosEnviados) return;
     const avisoErro = document.getElementById('erro-pdf');
     try{
-      const { bytes, nomeArquivo } = await gerarBytesPdf(ultimosDadosEnviados);
-      baixarBytesComoArquivo(bytes, nomeArquivo);
-      await enviarPdfParaSistema(nomeArquivo, bytes);
+      if (!ultimoPdf && ultimosDadosEnviados) ultimoPdf = await gerarBytesPdf(ultimosDadosEnviados);
+      if (ultimoPdf) baixarBytesComoArquivo(ultimoPdf.bytes, ultimoPdf.nomeArquivo);
       avisoErro.style.display = 'none';
     } catch(err){
       console.error('Falha ao gerar o PDF:', err);
